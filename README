@@ -1,0 +1,7 @@
+This project has a class to download stocks from the internet 
+
+and a main code to see total returns from your investments, specially for apps that dont have it already incorporated, such as stash
+
+a initialization file that contains all your stocks should be use in the format
+
+ticker:amount_invested:average_price
