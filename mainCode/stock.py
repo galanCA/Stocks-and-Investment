@@ -32,7 +32,12 @@ class stock():
 		html = response.content
 		temp_data = self.html2data(html)
 		self.historic = self.reshape_data(temp_data)
- 
+		self.data_lenght = len(self.historic["date"])
+		print self.data_lenght
+		#print self.data_lenght
+		#for dateline in self.historic["date"]: 
+		#print self.historic["date"]
+
 	def reshape_data(self, data):
 		temp_volume = []
 		temp_high = []
@@ -46,6 +51,9 @@ class stock():
 
 		for line in data:
 			try:
+				if not line["volume"] or not line["high"] or not line["adjclose"] or not line["low"] or not line["close"] or not line["open"]:
+					continue
+
 				temp_volume.append(line["volume"])
 				temp_high.append(line["high"])
 				temp_adjclose.append(line["adjclose"])
@@ -98,6 +106,61 @@ class stock():
 		plt.grid(True)
 		plt.show()
 
+
+	def investment_return(self, average_price):
+		percent_return = []
+		return_investment = []
+		try:
+			for j in xrange(0,self.data_lenght):
+				percent_return.append(((self.historic["close"][j] - average_price)/average_price)*100)
+				return_investment.append((percent_return[j]/100)*average_price)
+		except:
+			print "length: ", self.data_lenght
+			for i in xrange(0,self.data_lenght): 
+				print self.historic["date"][i], self.historic["close"][i]
+			raise
+
+		return [return_investment, percent_return]
+
+
+	def RSI(self, price_use="close",time_period=12, plot_data = True):
+
+		if (price_use != "close"): # or (price_use != "open"):
+			raise Exception("price choose its not correct") 
+
+		RSI_value = []
+		for i in xrange(self.data_lenght,time_period,-1):
+			[up_gain, down_gain] = self.price_difference(self.historic[price_use][(i-time_period):i])
+			average_gain = reduce(lambda x,y:x+y,up_gain)/len(up_gain)
+			average_loss = reduce(lambda x,y:x+y,down_gain)/len(down_gain)
+			RS = average_gain/(-average_loss)
+			RSI_value.append(100 - 100/(1+RS))
+
+		if plot_data:
+			fig = plt.figure()
+			plt.plot(self.historic["date"][time_period:self.data_lenght], RSI_value)
+			plt.grid(True)
+			plt.show()
+
+		return RSI_value
+
+	def price_difference(self, price):
+		diff = []
+
+		for i in xrange(0,len(price)-1):
+			diff.append(price[i+1] - price[i])
+
+		up_gain = []
+		down_gain = []
+		for data in diff:
+			if data > 0:
+				up_gain.append(data)
+			elif data < 0:
+				down_gain.append(data)
+
+		return [up_gain, down_gain]
+
+
 ########### Test Cases ##############
 def testStockProperties():
 	ticker = 'ITA'
@@ -115,8 +178,8 @@ def historicTest():
 def classTest():
 	#ticker = 'ITA'
 	ticker = 'AAPL'
-	apple_stock =  stock(ticker)
-	print "Apple data: ", apple_stock.data[0]
+	apple_stock = stock(ticker)
+	apple_stock.RSI()
 
 if __name__=="__main__":
 	#testStockProperties()

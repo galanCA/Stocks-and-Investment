@@ -27,10 +27,10 @@ for i in xrange(0,len(tickers)):
 	
 	return_investment = []
 	percent_return = []
-	#print "date length: ", len(scraped_data.historic["date"])
+	
 	for j in xrange(0,len(scraped_data.historic["date"])):
-		percent_return.append(((scraped_data.historic["close"][j] - average_price[i])/average_price[i])*100)
-		return_investment.append((percent_return[j]/100)*average_price[i])
+		[return_investment, percent_return] = scraped_data.investment_return(average_price[i])
+
 		if not i:
 			total_percentage.append(percent_return[j])
 			total_returns.append(return_investment[j])
