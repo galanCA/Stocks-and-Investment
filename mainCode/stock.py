@@ -4,10 +4,12 @@ date created: 2/5/2018
 Function: class to get stock data from multiples parts
 
 Todo:
-1) add more places to get the data such as pandas_datareader.data
+1) plotting the correct date
+2) being able to get more than 2000 data points for crypto
+3) work on the 
 
 '''
-
+# Libraries
 from lxml import html  
 import requests
 from exceptions import ValueError
@@ -17,8 +19,16 @@ import argparse
 from collections import OrderedDict
 from time import sleep
 import datetime
+
+
+# plot
+from pylab import *
 import matplotlib.pyplot as plt
-from matplotlib.finance import candlestick_ohlc as plt_candle
+import time
+from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
+     DayLocator, MONDAY, SecondLocator
+from matplotlib.finance import candlestick,\
+     plot_day_summary, candlestick2
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000'):
@@ -26,17 +36,22 @@ class Technical_Analysis(object):
 		self.currency = currency
 		self.amount = amount
 
+
 		self.historic_data()
 		self.date_correction()
 		#print self.trade_history
 		self.trade_history = self.reshape_data()
 		
-
-
 	def date_correction(self):
-		t0  = datetime.datetime(1970,1,1)
-
+		try:
+			if isinstance(self.trade_history["date"][0], datetime.datetime):
+				return None
+		except:
+			pass
+		
 		keys = self.trade_history[0].keys()
+
+		t0  = datetime.datetime(1970,1,1)
 
 		FLAG = False
 		for key in keys:
@@ -53,7 +68,15 @@ class Technical_Analysis(object):
 			new_date['date'] = t0+dt
 
 	def reshape_data(self):
-		keys = self.trade_history[0].keys()
+
+		try:
+			keys = self.trade_history[0].keys()
+		except:
+			keys = self.trade_history.keys()
+			if len(keys) > 0:
+				return self.trade_history
+			else:
+				raise
 
 		temp_data = {l:[] for l in keys}
 
@@ -65,7 +88,59 @@ class Technical_Analysis(object):
 					if (line[u'type'] == u'DIVIDEND'):
 						break
 
+		for k in keys:
+			temp_data[k] = np.array(temp_data.pop(k))
+
+
 		return temp_data
+
+	def time_interval(self, interval=datetime.timedelta(seconds=1) ):
+		keys = self.trade_history.keys()
+		trade_interval = {k:[] for k in keys}
+		
+		if interval.seconds:
+
+			if interval.seconds == 1:
+				return self.trade_history
+
+			j = interval.seconds
+			L = len(self.trade_history["date"])
+			for i in xrange(0, L, j):
+				if (i+j) > L:
+					j = L-i-1
+				trade_interval["date"].append(self.trade_history["date"][i])
+				trade_interval["open"].append(self.trade_history["open"][i])
+				trade_interval["high"].append(max(self.trade_history["high"][i:i+j]))
+				trade_interval["low"].append(min(self.trade_history["low"][i:i+j]))
+				trade_interval["close"].append(self.trade_history["close"][i+j])
+
+			return trade_interval
+
+		elif interval.days:
+			j =  interval.days*3600 
+			print j
+
+			L = len(self.trade_history["date"])
+			print "Length ",L
+			for i in xrange(0, L, j):
+				if (i+j) > L:
+					j = L-i-1
+
+				print i, i+j
+				trade_interval["date"].append(self.trade_history["date"][i])
+				trade_interval["open"].append(self.trade_history["open"][i])
+				trade_interval["high"].append(max(self.trade_history["high"][i:i+j]))
+				trade_interval["low"].append(min(self.trade_history["low"][i:i+j]))
+				trade_interval["close"].append(self.trade_history["close"][i+j])
+
+			return trade_interval
+
+
+
+
+
+
+
 
 	def support_breach(self):
 		breach_count = 0
@@ -139,18 +214,145 @@ class Technical_Analysis(object):
 
 		return [up_gain, down_gain]
 
+	def SMA(self, price="close", period=20):
+		sma = []
+		for i in xrange(period,len(self.trade_history[price])):
+			# take the average of i-period to i
+			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i])/period
+
+			sma.append(temp)
+
+		return sma
+
+	def EMA(self, price="close", period=20):
+		sma = self.SMA(price=price, period=period)
+		wma = (2/(period+1))
+		ema = []
+		for i in xrange(period, len(self.trade_history[price])):
+			ema.append( self.trade_history[price][i]-ema[i-1]*wma + ema[i-1] )
+
+		return ema
+
+	def Bolli_Bands(self, period=20, std_multipliyer=2):
+		sma = self.SMA(period=period)
+		upper_band = sma + (std(sma)*std_multipliyer)
+		lower_band = sma - (std(sma)*std_multipliyer)
+
+	def MACD(self,short_period = 12, long_period=26):
+		short_term_ema = self.EMA(period=short_period)
+		long_term_emd = self.EMA(period=long_period)
+
+		#signal line
+
+	def PPO(self):
+		pass
+		pass
+
 	def plot(self):
-		fig = plt.figure()
-		ax1 = plt.subplot2grid((6,1), (0,0), rowspan=6, colspan=1)
-		ax1.xaxis_date()
 
+		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
+		alldays    = DayLocator()              # minor ticks on the days
+		minute = MinuteLocator()
+		weekFormatter = DateFormatter('%b %d')  # e.g., Jan 12
+		dayFormatter = DateFormatter('%d')      # e.g., 12
+		fig, ax = plt.subplots()
+		fig.subplots_adjust(bottom=0.2)
+		ax.xaxis.set_major_locator(mondays)
+		ax.xaxis.set_minor_locator(alldays)
+		ax.xaxis.set_major_formatter(weekFormatter)
+		self._candlestick(ax,self.trade_history["date"],self.trade_history["open"],
+					self.trade_history["close"],
+					self.trade_history["high"],
+					self.trade_history["low"],
+					width=0.0006, colorup="g", colordown="r")
 
-		plt_candle(ax1, self.trade_history, width=1) #colorup='g', colordown='k', alpha=0.75)
+		ax.xaxis_date()
+		ax.autoscale_view()
+		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 
-		#plt_candle(self)
-		#plt.plot(self.historic["date"], self.historic["close"])
-		plt.grid(True)
 		plt.show()
+
+	def _candlestick(self,ax, date,open,close,high,low, width=0.2, colorup='k', colordown='r',
+		alpha=1.0, ochl=True):
+		"""
+		Plot the time, open, high, low, close as a vertical line ranging
+		from low to high.  Use a rectangular bar to represent the
+		open-close span.  If close >= open, use colorup to color the bar,
+		otherwise use colordown
+
+		Parameters
+		----------
+		ax : `Axes`
+			an Axes instance to plot to
+		quotes : sequence of quote sequences
+			data to plot.  time must be in float date format - see date2num
+			(time, open, high, low, close, ...) vs
+			(time, open, close, high, low, ...)
+			set by `ochl`
+		width : float
+			fraction of a day for the rectangle width
+		colorup : color
+			the color of the rectangle where close >= open
+		colordown : color
+			the color of the rectangle where close <  open
+		alpha : float
+			the rectangle alpha level
+		ochl: bool
+			argument to select between ochl and ohlc ordering of quotes
+
+		Returns
+		-------
+		ret : tuple
+			returns (lines, patches) where lines is a list of lines
+			added and patches is a list of the rectangle patches added
+
+		"""
+
+		OFFSET = width / 2.0
+
+
+
+		lines = []
+		patches = []
+		l = len(date)
+		for i in xrange(0,l):
+			#if ochl:
+			#	t, open, close, high, low = q[:5]
+			#else:
+			#	t, open, high, low, close = q[:5]
+			dateNum = date2num(date[i])
+			if close[i] >= open[i]:
+				color = colorup
+				lower = open[i]
+				height = close[i] - open[i]
+			else:
+				color = colordown
+				lower = close[i]
+				height = open[i] - close[i]
+
+			vline = Line2D(
+				xdata=(dateNum, dateNum), ydata=(low[i], high[i]),
+				color=color,
+				linewidth=0.5,
+				antialiased=True,
+				)
+
+			rect = Rectangle(
+				xy=(dateNum - OFFSET, lower),
+				width=width,
+				height=height,
+				facecolor=color,
+				edgecolor=color,
+			)
+			rect.set_alpha(alpha)
+
+			lines.append(vline)
+			patches.append(rect)
+			ax.add_line(vline)
+			ax.add_patch(rect)
+		ax.autoscale_view()
+
+		return lines, patches
 
 
 class stock(Technical_Analysis):
@@ -158,7 +360,48 @@ class stock(Technical_Analysis):
 	def __init__(self, ticker):
 		Technical_Analysis.__init__(self, ticker)
 
-	def historic_data(self):
+	def historic_data(self, period=60, days=1,exchange='NASD'):
+		url = 'https://finance.google.com/finance/getprices' + \
+			'?p={days}d&f=d,o,h,l,c,v&q={ticker}&i={period}&x={exchange}'.format(ticker=self.ticker, 
+																					period=period, 
+																					days=days,
+																					exchange=exchange)
+
+		response = requests.get(url)
+		content = response.content.splitlines()
+
+		date = []
+		opend = []
+		closed = []
+		highd = []
+		lowd = []
+		volume = []
+
+		t0  = datetime.datetime(1970,1,1)
+
+		#print content
+		for line in content:
+			split = line.split(",")
+			if len(split) == 6:
+				if 'COLUMNS' in split[0]:
+					continue
+
+				if 'a' in split[0]:
+					dt = datetime.timedelta(seconds=int(split[0].replace('a','')))
+					date.append(t0 + dt)
+				else:
+					date.append(t0 + dt + datetime.timedelta(minutes=float(split[0])))
+				opend.append(split[4])
+				closed.append(split[1])
+				highd.append(split[2])
+				lowd.append(split[3])
+				volume.append(split[5])
+	
+		
+		self.trade_history = {"date":date,"open":opend,"close":closed,"high":highd, "low":lowd, "volume":volume}
+		#print self.trade_history
+
+	def historic_data_yahoo(self):
 		url = "http://finance.yahoo.com/quote/%s/history?p=%s"%(self.ticker,self.ticker)
 		response = requests.get(url)
 		html = response.content
@@ -271,8 +514,8 @@ class stock_yahoo():
 		return [return_investment, percent_return]
 
 class cryptocurrency(Technical_Analysis):
-	def __init__(self, ticker):
-		Technical_Analysis.__init__(self, ticker)
+	def __init__(self, ticker, currency='USD', amount='2000'):
+		Technical_Analysis.__init__(self, ticker, currency=currency, amount=amount)
 
 	def historic_data(self):
 		url = "https://min-api.cryptocompare.com/data/histominute" +\
@@ -285,9 +528,6 @@ class cryptocurrency(Technical_Analysis):
 
 		self.trade_history = response.json()['Data']
 		#self.timeTo = self.trade_history['TimeTo']
-
-
-
 
 ########### Test Cases ##############
 def testStockProperties():
@@ -315,19 +555,23 @@ def supTest():
 	apple_stock.support_breach()
 
 def parent_classes():
-	ETH = cryptocurrency('ETH')
-	print "ETH: ", ETH.trade_history
-	
-	F = stock('F')
-	print "F: ", F.trade_history
+	ETH = cryptocurrency('ETH', amount='36000')
+	print ETH.amount
+	#print "ETH: ", ETH.trade_history["date"]
+	print ETH.time_interval(datetime.timedelta(days=1))
+	#ETH.plot()
 
-	AAPL = stock('AAPL')
-	print "AAPL: ",AAPL.trade_history
+	print max(ETH.trade_history["high"][1980:2010])
+	
+	#F = stock('MSFT')
+	#print "F: ", F.trade_history["date"]
+
+	#AAPL = stock('AAPL')
+	#print "AAPL: ",AAPL.trade_history
+
+	#F.plot()
 
 if __name__=="__main__":
-	#testStockProperties()
-	#historicTest()
-    #supTest()
     parent_classes()
 
 
