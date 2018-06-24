@@ -5,8 +5,13 @@ Function: class to get stock data from multiples parts
 
 Todo:
 1) plotting the correct date
-2) being able to get more than 2000 data points for crypto
 3) work on the 
+
+Working on:
+2) being able to get more than 2000 data points for crypto
+
+Done:
+
 
 '''
 # Libraries
@@ -31,10 +36,13 @@ from matplotlib.finance import candlestick,\
      plot_day_summary, candlestick2
 
 class Technical_Analysis(object):
-	def __init__(self, ticker=None, currency='USD', amount='2000'):
+	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD'):
 		self.ticker = ticker
 		self.currency = currency
 		self.amount = amount
+		self.period = period
+		self.days = days
+		self.exchange=exchange
 
 
 		self.historic_data()
@@ -52,6 +60,7 @@ class Technical_Analysis(object):
 		keys = self.trade_history[0].keys()
 
 		t0  = datetime.datetime(1970,1,1)
+		timezone = datetime.timedelta(hours=6)
 
 		FLAG = False
 		for key in keys:
@@ -65,7 +74,7 @@ class Technical_Analysis(object):
 				dt = datetime.timedelta(seconds=new_date.pop('time'))
 			else:
 				dt = datetime.timedelta(seconds=new_date['date'])
-			new_date['date'] = t0+dt
+			new_date['date'] = t0+dt-timezone
 
 	def reshape_data(self):
 
@@ -135,40 +144,32 @@ class Technical_Analysis(object):
 
 			return trade_interval
 
-
-
-
-
-
-
-
-	def support_breach(self):
+	def support_breach(self, plot_data=True):
 		breach_count = 0
 		closing_price = 0
 		current_support = 0
 		new_high = 0
+		breach_number = []
 
 		for i in xrange(0,len(self.trade_history)-1):
-			
-			#print "closing price", self.trade_history[i]["close"]
 			
 			# New high?
 			if self.trade_history[i]["close"] > new_high:
 				current_support = self.trade_history[i]["close"] 
 				breach_count = 0
 				new_high = current_support
-				#print "New High ", new_high
-
-			#else:
-				#print "No New high"
 
 			# Current support
 			if self.trade_history[i]["close"] < current_support:
 				current_support = self.trade_history[i]["close"]
-				#print "Current support ", current_support
 				if self.trade_history[i+1]["close"] > current_support:
 					breach_count = breach_count + 1
 					print "Breach Count incremented: ", breach_count
+
+
+			breach_number.append(breach_count)
+
+		return breach_number
 
 	def RSI(self, price_use="close",time_period=14, plot_data = True):
 
@@ -191,10 +192,7 @@ class Technical_Analysis(object):
 			RSI_value.append(100 - 100/(1+RS))
 
 		if plot_data:
-			fig = plt.figure()
-			plt.plot(self.trade_history["time"][time_period:len(self.trade_history[price_use])], RSI_value)
-			plt.grid(True)
-			plt.show()
+			self.__techincal_plot(self.trade_history["date"][time_period:len(self.trade_history[price_use])], RSI_value)
 
 		return RSI_value
 
@@ -214,7 +212,7 @@ class Technical_Analysis(object):
 
 		return [up_gain, down_gain]
 
-	def SMA(self, price="close", period=20):
+	def SMA(self, price="close", period=20, plot_data = True):
 		sma = []
 		for i in xrange(period,len(self.trade_history[price])):
 			# take the average of i-period to i
@@ -222,21 +220,35 @@ class Technical_Analysis(object):
 
 			sma.append(temp)
 
+		if plot_data:
+			self.__techincal_plot(self.trade_history["date"][time_period:len(self.trade_history[price_use])], sma)
+
 		return sma
 
-	def EMA(self, price="close", period=20):
-		sma = self.SMA(price=price, period=period)
+	def EMA(self, price="close", period=20, plot_data = True):
+		sma = self.SMA(price=price, period=period, plot_data=False)
 		wma = (2/(period+1))
 		ema = []
 		for i in xrange(period, len(self.trade_history[price])):
 			ema.append( self.trade_history[price][i]-ema[i-1]*wma + ema[i-1] )
 
+		if plot_data:
+			self.__techincal_plot(self.trade_history["date"][time_period:len(self.trade_history[price_use])], ema)
+
 		return ema
 
-	def Bolli_Bands(self, period=20, std_multipliyer=2):
-		sma = self.SMA(period=period)
-		upper_band = sma + (std(sma)*std_multipliyer)
-		lower_band = sma - (std(sma)*std_multipliyer)
+	def Bolli_Bands(self, period=20, std_multipliyer=2, plot_data=True):
+		sma = self.SMA(period=period, plot_data= False)
+		upper_band = sma + (np.std(sma)*std_multipliyer)
+		lower_band = sma - (np.std(sma)*std_multipliyer)
+
+		if plot_data:
+			time = self.trade_history["date"][time_period:len(self.trade_history[price_use])]
+			self.__techincal_plot(time, sma)
+			self.__techincal_plot(time, upper_band)
+			self.__techincal_plot(time, lower_bands)
+
+		return [sma, upper_band, lower_band]
 
 	def MACD(self,short_period = 12, long_period=26):
 		short_term_ema = self.EMA(period=short_period)
@@ -253,14 +265,16 @@ class Technical_Analysis(object):
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
 		alldays    = DayLocator()              # minor ticks on the days
 		minute = MinuteLocator()
-		weekFormatter = DateFormatter('%b %d')  # e.g., Jan 12
+		weekFormatter = DateFormatter('%b %d %H:%M:%S')  # e.g., Jan 12
 		dayFormatter = DateFormatter('%d')      # e.g., 12
 		fig, ax = plt.subplots()
 		fig.subplots_adjust(bottom=0.2)
-		ax.xaxis.set_major_locator(mondays)
-		ax.xaxis.set_minor_locator(alldays)
+		#ax.xaxis.set_major_locator(mondays)
+		#ax.xaxis.set_minor_locator(alldays)
 		ax.xaxis.set_major_formatter(weekFormatter)
-		self._candlestick(ax,self.trade_history["date"],self.trade_history["open"],
+		self._candlestick(ax,
+					self.trade_history["date"],
+					self.trade_history["open"],
 					self.trade_history["close"],
 					self.trade_history["high"],
 					self.trade_history["low"],
@@ -310,8 +324,6 @@ class Technical_Analysis(object):
 
 		OFFSET = width / 2.0
 
-
-
 		lines = []
 		patches = []
 		l = len(date)
@@ -354,18 +366,23 @@ class Technical_Analysis(object):
 
 		return lines, patches
 
+	def __techincal_plot(self, time, data):
+		fig = plt.figure()
+		plt.plot(time, data)
+		plt.grid(True)
+		plt.show()
 
 class stock(Technical_Analysis):
 
-	def __init__(self, ticker):
-		Technical_Analysis.__init__(self, ticker)
+	def __init__(self, ticker, period=60, days=1, exchange='NASD'):
+		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange)
 
-	def historic_data(self, period=60, days=1,exchange='NASD'):
+	def historic_data(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
 			'?p={days}d&f=d,o,h,l,c,v&q={ticker}&i={period}&x={exchange}'.format(ticker=self.ticker, 
-																					period=period, 
-																					days=days,
-																					exchange=exchange)
+																					period=self.period, 
+																					days=self.days,
+																					exchange=self.exchange)
 
 		response = requests.get(url)
 		content = response.content.splitlines()
@@ -391,11 +408,11 @@ class stock(Technical_Analysis):
 					date.append(t0 + dt)
 				else:
 					date.append(t0 + dt + datetime.timedelta(minutes=float(split[0])))
-				opend.append(split[4])
-				closed.append(split[1])
-				highd.append(split[2])
-				lowd.append(split[3])
-				volume.append(split[5])
+				opend.append(float(split[4]))
+				closed.append(float(split[1]))
+				highd.append(float(split[2]))
+				lowd.append(float(split[3]))
+				volume.append(int(split[5]))
 	
 		
 		self.trade_history = {"date":date,"open":opend,"close":closed,"high":highd, "low":lowd, "volume":volume}
@@ -421,6 +438,124 @@ class stock(Technical_Analysis):
 			raise
 
 		return data
+
+class cryptocurrency(Technical_Analysis):
+	def __init__(self, ticker, currency='USD', amount='2000'):
+		Technical_Analysis.__init__(self, ticker, currency=currency, amount=amount)
+
+	def historic_data(self):
+		url = "https://min-api.cryptocompare.com/data/histominute" +\
+		"?fsym=%s"%(self.ticker) +\
+		"&tsym=%s"%(self.currency) +\
+		"&limit=%s"%(self.amount) +\
+		"&aggregate=1" 
+		#"&toTs"
+
+		response = requests.get(url)
+
+		self.trade_history = response.json()['Data']
+
+		
+		for i in xrange(1,int(self.amount)/2000):
+			url = "https://min-api.cryptocompare.com/data/histominute" +\
+			"?fsym=%s"%(self.ticker) +\
+			"&tsym=%s"%(self.currency) +\
+			"&limit=%s"%(self.amount) +\
+			"&aggregate=1" +\
+			"&toTs=%s"%(self.trade_history[0]["time"])
+
+			response = requests.get(url)
+
+			temp = response.json()['Data']
+
+			for data in self.trade_history:
+				temp.append(data)
+
+			
+			self.trade_history = temp
+
+		if (float(self.amount)/2000.0 - int(self.amount)/2000):
+			rest = int((float(self.amount)/2000.0 - int(self.amount)/2000)*2000)
+			url = "https://min-api.cryptocompare.com/data/histominute" +\
+			"?fsym=%s"%(self.ticker) +\
+			"&tsym=%s"%(self.currency) +\
+			"&limit=%s"%(rest) +\
+			"&aggregate=1" +\
+			"&toTs=%s"%(self.trade_history[0]["time"])
+
+			response = requests.get(url)
+
+			temp = response.json()['Data']
+
+			for data in self.trade_history:
+				temp.append(data)
+
+			self.trade_history = temp
+
+
+########### Test Cases ##############
+def testStockProperties():
+	ticker = 'ITA'
+	print "Fetching data for %s"%(ticker)
+	scraped_data = ETF_parse(ticker)
+	print "Writing data to output file"
+	print "Data: ", scraped_data 
+
+def historicTest():
+	#ticker = 'ITA'
+	ticker = 'AAPL'
+	apple_data = historic_stock(ticker)
+	#print apple_data 
+
+def classTest():
+	#ticker = 'ITA'
+	ticker = 'AAPL'
+	apple_stock = stock(ticker)
+	apple_stock.RSI()
+
+def supTest():
+	ticker = 'AAPL'
+	apple_stock = stock(ticker)
+	apple_stock.support_breach()
+
+def parent_classes():
+	# stock
+	TTMI = stock('TTMI', days=4)
+	#print TTMI.trade_history
+	TTMI.plot()
+	#TTMI.RSI()
+
+
+	#crypto
+	#ETH = cryptocurrency('ETH', amount='7000')
+	#print ETH.trade_history["date"]
+
+	#print "ETH: ", ETH.trade_history["date"]
+	#print ETH.time_interval(datetime.timedelta(days=1))
+	#ETH.plot()
+
+if __name__=="__main__":
+    parent_classes()
+
+
+
+
+'''
+import requests
+url = 'https://min-api.cryptocompare.com/data/histominute' +\
+        '?fsym=ETH' +\
+        '&tsym=USD' +\
+        '&limit=2000' +\
+        '&aggregate=1'
+response = requests.get(url)
+data = response.json()['Data']
+
+import pandas as pd
+df = pd.DataFrame(data)
+print(df)
+
+
+
 
 class stock_yahoo():
 	def __init__(self, ticker):
@@ -512,82 +647,4 @@ class stock_yahoo():
 			raise
 
 		return [return_investment, percent_return]
-
-class cryptocurrency(Technical_Analysis):
-	def __init__(self, ticker, currency='USD', amount='2000'):
-		Technical_Analysis.__init__(self, ticker, currency=currency, amount=amount)
-
-	def historic_data(self):
-		url = "https://min-api.cryptocompare.com/data/histominute" +\
-		"?fsym=%s"%(self.ticker) +\
-		"&tsym=%s"%(self.currency) +\
-		"&limit=%s"%(self.amount) +\
-		"&aggregate=1" 
-
-		response = requests.get(url)
-
-		self.trade_history = response.json()['Data']
-		#self.timeTo = self.trade_history['TimeTo']
-
-########### Test Cases ##############
-def testStockProperties():
-	ticker = 'ITA'
-	print "Fetching data for %s"%(ticker)
-	scraped_data = ETF_parse(ticker)
-	print "Writing data to output file"
-	print "Data: ", scraped_data 
-
-def historicTest():
-	#ticker = 'ITA'
-	ticker = 'AAPL'
-	apple_data = historic_stock(ticker)
-	#print apple_data 
-
-def classTest():
-	#ticker = 'ITA'
-	ticker = 'AAPL'
-	apple_stock = stock(ticker)
-	apple_stock.RSI()
-
-def supTest():
-	ticker = 'AAPL'
-	apple_stock = stock(ticker)
-	apple_stock.support_breach()
-
-def parent_classes():
-	ETH = cryptocurrency('ETH', amount='36000')
-	print ETH.amount
-	#print "ETH: ", ETH.trade_history["date"]
-	print ETH.time_interval(datetime.timedelta(days=1))
-	#ETH.plot()
-
-	print max(ETH.trade_history["high"][1980:2010])
-	
-	#F = stock('MSFT')
-	#print "F: ", F.trade_history["date"]
-
-	#AAPL = stock('AAPL')
-	#print "AAPL: ",AAPL.trade_history
-
-	#F.plot()
-
-if __name__=="__main__":
-    parent_classes()
-
-
-
-
-'''
-import requests
-url = 'https://min-api.cryptocompare.com/data/histominute' +\
-        '?fsym=ETH' +\
-        '&tsym=USD' +\
-        '&limit=2000' +\
-        '&aggregate=1'
-response = requests.get(url)
-data = response.json()['Data']
-
-import pandas as pd
-df = pd.DataFrame(data)
-print(df)
 '''
