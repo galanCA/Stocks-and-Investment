@@ -1,3 +1,4 @@
+
 import numpy as np 
 
 def linspace(start_value,end_value,Number_l=1):

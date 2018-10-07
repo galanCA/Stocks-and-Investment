@@ -56,7 +56,7 @@ class Technical_Analysis(object):
 				return None
 		except:
 			pass
-		
+		print self.trade_history
 		keys = self.trade_history[0].keys()
 
 		t0  = datetime.datetime(1970,1,1)
@@ -520,10 +520,16 @@ def supTest():
 
 def parent_classes():
 	# stock
-	TTMI = stock('TTMI', days=4)
+	TTMI = stock('ITA')
 	#print TTMI.trade_history
 	TTMI.plot()
 	#TTMI.RSI()
+
+def other_test():
+	import pandas as pd
+	import pandas_datareader.data as web
+
+	 result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
 
 
 	#crypto
