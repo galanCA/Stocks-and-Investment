@@ -25,6 +25,9 @@ from collections import OrderedDict
 from time import sleep
 import datetime
 
+import pandas as pd
+import pandas_datareader.data as web
+
 
 # plot
 from pylab import *
@@ -377,7 +380,10 @@ class stock(Technical_Analysis):
 	def __init__(self, ticker, period=60, days=1, exchange='NASD'):
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange)
 
-	def historic_data(self, period=60, days=1, exchange='NASD'):
+	def historic_data(self, period=60, days=1):
+		result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+
+	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
 			'?p={days}d&f=d,o,h,l,c,v&q={ticker}&i={period}&x={exchange}'.format(ticker=self.ticker, 
 																					period=self.period, 
@@ -386,6 +392,7 @@ class stock(Technical_Analysis):
 
 		response = requests.get(url)
 		content = response.content.splitlines()
+		print content 
 
 		date = []
 		opend = []
@@ -524,14 +531,6 @@ def parent_classes():
 	#print TTMI.trade_history
 	TTMI.plot()
 	#TTMI.RSI()
-
-def other_test():
-	import pandas as pd
-	import pandas_datareader.data as web
-
-	 result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
-
-
 	#crypto
 	#ETH = cryptocurrency('ETH', amount='7000')
 	#print ETH.trade_history["date"]
@@ -540,8 +539,17 @@ def other_test():
 	#print ETH.time_interval(datetime.timedelta(days=1))
 	#ETH.plot()
 
+def other_test():
+	
+
+	result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+	print result
+
+
+	
 if __name__=="__main__":
-    parent_classes()
+	#parent_classes()
+	other_test()
 
 
 
