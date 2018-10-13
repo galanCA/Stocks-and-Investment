@@ -3,6 +3,8 @@ Author: Cesar Galan
 date created: 2/5/2018
 Function: class to get stock data from multiples parts
 
+TEst something
+
 Todo:
 1) plotting the correct date
 3) work on the 
@@ -24,6 +26,9 @@ import argparse
 from collections import OrderedDict
 from time import sleep
 import datetime
+
+import pandas as pd
+import pandas_datareader.data as web
 
 
 # plot
@@ -377,7 +382,10 @@ class stock(Technical_Analysis):
 	def __init__(self, ticker, period=60, days=1, exchange='NASD'):
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange)
 
-	def historic_data(self, period=60, days=1, exchange='NASD'):
+	def historic_data(self, period=60, days=1):
+		result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+
+	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
 			'?p={days}d&f=d,o,h,l,c,v&q={ticker}&i={period}&x={exchange}'.format(ticker=self.ticker, 
 																					period=self.period, 
@@ -386,6 +394,7 @@ class stock(Technical_Analysis):
 
 		response = requests.get(url)
 		content = response.content.splitlines()
+		print content 
 
 		date = []
 		opend = []
@@ -524,14 +533,6 @@ def parent_classes():
 	#print TTMI.trade_history
 	TTMI.plot()
 	#TTMI.RSI()
-
-def other_test():
-	import pandas as pd
-	import pandas_datareader.data as web
-
-	 result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
-
-
 	#crypto
 	#ETH = cryptocurrency('ETH', amount='7000')
 	#print ETH.trade_history["date"]
@@ -540,117 +541,15 @@ def other_test():
 	#print ETH.time_interval(datetime.timedelta(days=1))
 	#ETH.plot()
 
-if __name__=="__main__":
-    parent_classes()
-
-
-
-
-'''
-import requests
-url = 'https://min-api.cryptocompare.com/data/histominute' +\
-        '?fsym=ETH' +\
-        '&tsym=USD' +\
-        '&limit=2000' +\
-        '&aggregate=1'
-response = requests.get(url)
-data = response.json()['Data']
-
-import pandas as pd
-df = pd.DataFrame(data)
-print(df)
-
-
-
-
-class stock_yahoo():
-	def __init__(self, ticker):
-		self.ticker = ticker
-		self.historic_stock()
-
-	def historic_stock(self):
-		url = "http://finance.yahoo.com/quote/%s/history?p=%s"%(self.ticker,self.ticker)
-		response = requests.get(url)
-		html = response.content
-		temp_data = self.html2data(html)
-		self.historic = self.reshape_data(temp_data)
-		self.data_lenght = len(self.historic["date"])
-		print self.data_lenght
-		#print self.data_lenght
-		#for dateline in self.historic["date"]: 
-		#print self.historic["date"]
-
-	def reshape_data(self, data):
-		temp_volume = []
-		temp_high = []
-		temp_adjclose = []
-		temp_low = []
-		temp_date = []
-		temp_close = []
-		temp_open = []
-
-		t0  = datetime.datetime(1970,1,1)
-
-		for line in data:
-			try:
-				if not line["volume"] or not line["high"] or not line["adjclose"] or not line["low"] or not line["close"] or not line["open"]:
-					continue
-
-				temp_volume.append(line["volume"])
-				temp_high.append(line["high"])
-				temp_adjclose.append(line["adjclose"])
-				temp_low.append(line["low"])
-				temp_close.append(line["close"])
-				temp_open.append(line["open"])
-			except:
-				continue
-
-			dt = datetime.timedelta(seconds=line["date"])
-			temp_date.append(t0+dt)
-
-		temp_data = {"volume":temp_volume,
-					"high":temp_high,
-					"adjclose":temp_adjclose,
-					"low":temp_low,
-					"close":temp_close,
-					"open":temp_open,
-					"date":temp_date
-					}
-		return temp_data
-
-	def html2data(self, html):
-		Ibegin = html.find("HistoricalPriceStore") + len("HistoricalPriceStore") + 12
-		Iend = html.find("isPending") - 2
-		try:
-			data = json.loads(html[Ibegin:Iend])
-		except:
-			print "broken self"
-			raise
-
-		return data
-
-	def convert_date(self, data):
-		t0  = datetime.date(1970,1,1)
-		for day_trade in data:
-			dt = datetime.timedelta(days=day_trade["date"]/86400)
-			day_trade["date"] = t0 + dt
-		return data
-
+def other_test():
 	
 
+	result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+	print result
 
-	def investment_return(self, average_price):
-		percent_return = []
-		return_investment = []
-		try:
-			for j in xrange(0,self.data_lenght):
-				percent_return.append(((self.historic["close"][j] - average_price)/average_price)*100)
-				return_investment.append((percent_return[j]/100)*average_price)
-		except:
-			print "length: ", self.data_lenght
-			for i in xrange(0,self.data_lenght): 
-				print self.historic["date"][i], self.historic["close"][i]
-			raise
 
-		return [return_investment, percent_return]
-'''
+	
+if __name__=="__main__":
+	#parent_classes()
+	other_test()
+
