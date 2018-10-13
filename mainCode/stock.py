@@ -3,6 +3,8 @@ Author: Cesar Galan
 date created: 2/5/2018
 Function: class to get stock data from multiples parts
 
+TEst something
+
 Todo:
 1) plotting the correct date
 3) work on the 
