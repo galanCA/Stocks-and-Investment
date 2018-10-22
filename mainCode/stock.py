@@ -382,8 +382,18 @@ class stock(Technical_Analysis):
 	def __init__(self, ticker, period=60, days=1, exchange='NASD'):
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange)
 
-	def historic_data(self, period=60, days=1):
-		result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+	def historic_data(self, period=60, days=364):
+		website = 'yahoo'
+
+		# Create datetime  of today
+		until_dt = datetime.datetime.now()
+		until_str = until_dt.strftime("%Y-%m-%d")
+
+		# create datetime of today minus days
+		from_dt = until_dt - datetime.timedelta(days)
+		from_str = from_dt.strftime("%Y-%m-%d")
+
+		result = web.DataReader(self.ticker, website, from_str, until_str)
 
 	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
@@ -542,10 +552,23 @@ def parent_classes():
 	#ETH.plot()
 
 def other_test():
-	
+	ticker = "ITA"
+	website = "yahoo"
+	days = 365
+	until_dt = datetime.datetime.now()
+	until_str = until_dt.strftime("%Y-%m-%d")
 
-	result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+	# create datetime of today minus days
+	from_dt = until_dt - datetime.timedelta(days)
+	from_str = from_dt.strftime("%Y-%m-%d")
+
+	result = web.DataReader(ticker, website, from_str, until_str)
+	#result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
 	print result
+	print result.index.values
+	#print result
+	print result.dtypes
+
 
 
 	
