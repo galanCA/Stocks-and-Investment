@@ -51,9 +51,9 @@ class Technical_Analysis(object):
 
 
 		self.historic_data()
-		self.date_correction()
+		#self.date_correction()
 		#print self.trade_history
-		self.trade_history = self.reshape_data()
+		#self.trade_history = self.reshape_data()
 		
 	def date_correction(self):
 		try:
@@ -265,6 +265,35 @@ class Technical_Analysis(object):
 		pass
 		pass
 
+	def plot_returns(self, N_shares=1, aveg_price=195):
+		'''
+		TODO:
+		Align yaxis
+		'''
+		fig, ax = plt.subplots()
+		fig.subplots_adjust(bottom=0.2)
+
+		
+		data = self.historic_data["Close"]*N_shares
+
+
+		if aveg_price:
+			data_perc = (self.historic_data["High"] - aveg_price)/aveg_price *100
+		else:
+			data_perc = (self.historic_data["High"] - self.historic_data["High"][0])/self.historic_data["High"][0] *100
+		axy = ax.twinx()
+
+		ax.plot(self.historic_data.index.values, data)
+		axy.plot(self.historic_data.index.values, data_perc, "w" )
+		ax.set_ylabel("Price")
+		axy.set_ylabel("Percentage")
+
+
+		ax.grid(True)
+		plt.show()
+
+		return [data, data_perc] 
+
 	def plot(self):
 
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
@@ -278,11 +307,11 @@ class Technical_Analysis(object):
 		#ax.xaxis.set_minor_locator(alldays)
 		ax.xaxis.set_major_formatter(weekFormatter)
 		self._candlestick(ax,
-					self.trade_history["date"],
-					self.trade_history["open"],
-					self.trade_history["close"],
-					self.trade_history["high"],
-					self.trade_history["low"],
+					self.historic_data.index.values,
+					self.historic_data["Open"],
+					self.historic_data["Close"],
+					self.historic_data["High"],
+					self.historic_data["Low"],
 					width=0.0006, colorup="g", colordown="r")
 
 		ax.xaxis_date()
@@ -393,7 +422,7 @@ class stock(Technical_Analysis):
 		from_dt = until_dt - datetime.timedelta(days)
 		from_str = from_dt.strftime("%Y-%m-%d")
 
-		result = web.DataReader(self.ticker, website, from_str, until_str)
+		self.historic_data = web.DataReader(self.ticker, website, from_str, until_str)
 
 	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
@@ -511,7 +540,6 @@ class cryptocurrency(Technical_Analysis):
 
 			self.trade_history = temp
 
-
 ########### Test Cases ##############
 def testStockProperties():
 	ticker = 'ITA'
@@ -527,10 +555,11 @@ def historicTest():
 	#print apple_data 
 
 def classTest():
-	#ticker = 'ITA'
-	ticker = 'AAPL'
-	apple_stock = stock(ticker)
-	apple_stock.RSI()
+	ticker = 'ITA'
+	#ticker = 'AAPL'
+	ITA = stock(ticker)
+	print ITA.historic_data 
+	ITA.plot_returns()
 
 def supTest():
 	ticker = 'AAPL'
@@ -564,15 +593,16 @@ def other_test():
 
 	result = web.DataReader(ticker, website, from_str, until_str)
 	#result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
-	print result
-	print result.index.values
-	#print result
-	print result.dtypes
+	print (result["High"] - result["High"][0])/result["High"][0] *100
+	#print result.index.values
+	#print result["High"]
+	#print result["High"].index
+	#print result.dtypes
 
 
 
 	
 if __name__=="__main__":
 	#parent_classes()
-	other_test()
-
+	#other_test()
+	classTest()
