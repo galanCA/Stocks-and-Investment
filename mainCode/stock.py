@@ -265,7 +265,7 @@ class Technical_Analysis(object):
 		pass
 		pass
 
-	def plot_returns(self, N_shares=1, aveg_price=195):
+	def plot_returns(self, N_shares=1, aveg_price=None):
 		'''
 		TODO:
 		Align yaxis
@@ -274,23 +274,32 @@ class Technical_Analysis(object):
 		fig.subplots_adjust(bottom=0.2)
 
 		
-		data = self.historic_data["Close"]*N_shares
+		data = self.historic_data["Close"]
 
 
-		if aveg_price:
-			data_perc = (self.historic_data["High"] - aveg_price)/aveg_price *100
-		else:
-			data_perc = (self.historic_data["High"] - self.historic_data["High"][0])/self.historic_data["High"][0] *100
+		if not aveg_price:
+			aveg_price = self.historic_data["High"][0]
+
+		print "average price is ", aveg_price
+
+		data_perc = (self.historic_data["High"] - aveg_price)/aveg_price *100
+		
 		axy = ax.twinx()
 
 		ax.plot(self.historic_data.index.values, data)
 		axy.plot(self.historic_data.index.values, data_perc, "w" )
+		price_ylim = ax.get_ylim()
+		percn_ylim = [(price_ylim[0] - aveg_price)/aveg_price *100, (price_ylim[1] - aveg_price)/aveg_price *100] 
+		
+		axy.set_ylim(percn_ylim)
+
 		ax.set_ylabel("Price")
 		axy.set_ylabel("Percentage")
 
-
+		plt.title(self.ticker)
 		ax.grid(True)
-		plt.show()
+		#axy.grid(True)
+		#plt.show()
 
 		return [data, data_perc] 
 
@@ -555,10 +564,10 @@ def historicTest():
 	#print apple_data 
 
 def classTest():
-	ticker = 'ITA'
+	ticker = 'BRK-B'
 	#ticker = 'AAPL'
 	ITA = stock(ticker)
-	print ITA.historic_data 
+	#print ITA.historic_data 
 	ITA.plot_returns()
 
 def supTest():
@@ -598,9 +607,6 @@ def other_test():
 	#print result["High"]
 	#print result["High"].index
 	#print result.dtypes
-
-
-
 	
 if __name__=="__main__":
 	#parent_classes()
