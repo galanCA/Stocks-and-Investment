@@ -5,3 +5,13 @@ and a main code to see total returns from your investments, specially for apps t
 a initialization file that contains all your stocks should be use in the format
 
 ticker:amount_invested:average_price
+
+
+
+Dependencies:
+
+lxml
+requests
+pandas
+pandas.datareader
+matplotlib

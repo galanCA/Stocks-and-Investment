@@ -1,9 +1,8 @@
 '''
 Author: Cesar Galan
 date created: 2/5/2018
-Function: class to get stock data from multiples parts
+Function: class to get stock data and crypto from multiples places
 
-TEst something
 
 Todo:
 1) plotting the correct date
@@ -37,11 +36,11 @@ import matplotlib.pyplot as plt
 import time
 from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
      DayLocator, MONDAY, SecondLocator
-from matplotlib.finance import candlestick,\
-     plot_day_summary, candlestick2
+# from matplotlib.finance     
+#from mpl_finance import candlestick2, plot_day_summary, candlestick2
 
 class Technical_Analysis(object):
-	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD'):
+	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
 		self.currency = currency
 		self.amount = amount
@@ -49,9 +48,12 @@ class Technical_Analysis(object):
 		self.days = days
 		self.exchange=exchange
 
+		if not from_date:
+			self.historic_data(ticker, period=period)
+		else:
+			self.historic_data(ticker, from_date=from_date, to_date=end_date)
 
-		self.historic_data()
-		self.date_correction()
+		#self.date_correction()
 		#print self.trade_history
 		self.trade_history = self.reshape_data()
 		
@@ -265,6 +267,21 @@ class Technical_Analysis(object):
 		pass
 		pass
 
+	def plot_line(self, day_value="Close"):
+		weekFormatter = DateFormatter('%b %d %H:%M:%S')
+		fig, ax = plt.subplots()
+		fig.subplots_adjust(bottom=0.2)
+		ax.xaxis.set_major_formatter(weekFormatter)
+		plt.plot(self.trade_history.index,self.trade_history[day_value])
+		#fig.subplots_adjust()
+		ax.xaxis_date()
+		ax.autoscale_view()
+		plt.title(self.ticker)
+		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+
+		plt.show()
+		
+
 	def plot(self):
 
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
@@ -278,11 +295,11 @@ class Technical_Analysis(object):
 		#ax.xaxis.set_minor_locator(alldays)
 		ax.xaxis.set_major_formatter(weekFormatter)
 		self._candlestick(ax,
-					self.trade_history["date"],
-					self.trade_history["open"],
-					self.trade_history["close"],
-					self.trade_history["high"],
-					self.trade_history["low"],
+					self.trade_history.index,
+					self.trade_history["Open"],
+					self.trade_history["Close"],
+					self.trade_history["High"],
+					self.trade_history["Low"],
 					width=0.0006, colorup="g", colordown="r")
 
 		ax.xaxis_date()
@@ -379,11 +396,20 @@ class Technical_Analysis(object):
 
 class stock(Technical_Analysis):
 
-	def __init__(self, ticker, period=60, days=1, exchange='NASD'):
-		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange)
+	def __init__(self, ticker, period=60, days=30, exchange='NASD', from_date=None, to_date=None):
+		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange, from_date=from_date, end_date=to_date)
 
-	def historic_data(self, period=60, days=1):
-		result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+	def historic_data(self,ticker, period=60, days=1, from_date=None, to_date=None):
+		
+		if not from_date:
+			today = datetime.datetime.today()
+			start_date = today-datetime.timedelta(period)
+			self.trade_history = web.DataReader(ticker, 'yahoo', start_date, today)
+		else:
+			self.trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
+
+		# self.trade_history["High"]
+		# ITA.trade_history.index[0] Get date
 
 	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
@@ -501,7 +527,6 @@ class cryptocurrency(Technical_Analysis):
 
 			self.trade_history = temp
 
-
 ########### Test Cases ##############
 def testStockProperties():
 	ticker = 'ITA'
@@ -529,9 +554,10 @@ def supTest():
 
 def parent_classes():
 	# stock
-	TTMI = stock('ITA')
+	AOK = stock('AOK')
+	#print ITA.trade_history.index[0]
 	#print TTMI.trade_history
-	TTMI.plot()
+	AOK.plot()
 	#TTMI.RSI()
 	#crypto
 	#ETH = cryptocurrency('ETH', amount='7000')
@@ -544,12 +570,10 @@ def parent_classes():
 def other_test():
 	
 
-	result = web.DataReader('AAPL', 'yahoo', '2017-01-01', '2018-01-01')
+	result = web.DataReader('AAPL', 'yahoo', '2018-01-01', '2019-01-01')
 	print result
-
-
 	
 if __name__=="__main__":
-	#parent_classes()
-	other_test()
+	parent_classes()
+	#other_test()
 
