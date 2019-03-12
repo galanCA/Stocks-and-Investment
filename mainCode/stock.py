@@ -281,7 +281,6 @@ class Technical_Analysis(object):
 
 		plt.show()
 		
-
 	def plot(self):
 
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
@@ -554,10 +553,10 @@ def supTest():
 
 def parent_classes():
 	# stock
-	AOK = stock('AOK')
+	AOK = stock('BRK-B')
 	#print ITA.trade_history.index[0]
 	#print TTMI.trade_history
-	AOK.plot()
+	AOK.plot_line()
 	#TTMI.RSI()
 	#crypto
 	#ETH = cryptocurrency('ETH', amount='7000')
