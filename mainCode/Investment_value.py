@@ -31,22 +31,26 @@ def Investment_data(stock_hist, Book, day_value="Close"):
 			#print Book.iloc[i]["Transaction"]
 			if "Sale" in Book.iloc[i]["Transaction"]:
 				continue
-				print Book.iloc[i]["Transaction"]
+				#print Book.iloc[i]["Transaction"]
 				Share_frac = -float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/float(sub(r'[^\d.]', '', Book.iloc[i]["Share Price"][1:]))
 			elif "Purchase" in Book.iloc[i]["Transaction"]:
 				Date = Book.iloc[i].name
 
-				print Date#, float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/float(sub(r'[^\d.]', '', Book.iloc[i]["Share Price"][1:]))	
 				Share_frac = float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/float(sub(r'[^\d.]', '', Book.iloc[i]["Share Price"][1:]))	
 				j=0
 				for d in stock_hist.trade_history.index:
 					if d >= Date and d <= Date:
 						break
 					j=j+1
-				print j, Share_frac
-				#print Share_frac + temp_array[j:]
+				if len(stock_hist.trade_history.index) == j:
+					j = 0
+					for d in stock_hist.trade_history.index:
+						if (d >= Date+ datetime.timedelta(1) and d <= Date+ datetime.timedelta(1)) or (d >= Date+ datetime.timedelta(2) and d <= Date+ datetime.timedelta(2)):
+							break
+						j=j+1
+
 			temp_array[j:] = Share_frac + temp_array[j:]
-			print "%2.5f" % max(temp_array)
+
 	temp_inv = temp_array*stock_hist.trade_history[day_value]
 	
 	stock_hist.trade_history[day_value +  " Investment"] = pd.Series(temp_inv, index=stock_hist.trade_history.index)
@@ -94,8 +98,6 @@ def main():
 
 
 	total_invest_data = pd.Panel(set_data)
-
-	#raise
 	
 	# set up total_invest data structure
 	#print total_invest_data[Investment_ticker[2]]["Close Investment"]
@@ -131,7 +133,7 @@ def main():
 	fig, ax = plt.subplots()
 	fig.subplots_adjust(bottom=0.2)
 	ax.xaxis.set_major_formatter(weekFormatter)
-	plt.plot(total_invest,'g', Book.index, Principal,'-*k')
+	plt.plot(total_invest,'g', Book.index, Principal,'-k')
 	#plt.plot(Book.index,Principal)
 	#fig.subplots_adjust()
 	ax.xaxis_date()
@@ -139,7 +141,7 @@ def main():
 	plt.title("Total")
 	plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 	plt.grid()
-	#plt.show()
+	plt.show()
 
 
 if __name__ == '__main__':
