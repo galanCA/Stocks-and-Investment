@@ -22,16 +22,13 @@ MAINSPREADSHEET_ID = '1wUBzSk-RY2fQC2Rri06v-ZJ6oHjwmhIIgBYVxncaUms'
 #history_investment = Gsheet(MAINSPREADSHEET_ID)
 
 def Investment_data(stock_hist, Book, day_value="Close"):
-	ticker  = stock_hist.ticker
-	#print len(stock_hist.trade_history.index)
+	ticker  = stock_hist.ticker 
 	temp_array = np.zeros(len(stock_hist.trade_history.index) )
 	for i in xrange(0,len(Book)):
 		prev_frac = 0
 		if Book.iloc[i]["Ticker"] in ticker:
-			#print Book.iloc[i]["Transaction"]
 			if "Sale" in Book.iloc[i]["Transaction"]:
 				continue
-				#print Book.iloc[i]["Transaction"]
 				Share_frac = -float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/float(sub(r'[^\d.]', '', Book.iloc[i]["Share Price"][1:]))
 			elif "Purchase" in Book.iloc[i]["Transaction"]:
 				Date = Book.iloc[i].name
@@ -52,6 +49,7 @@ def Investment_data(stock_hist, Book, day_value="Close"):
 			temp_array[j:] = Share_frac + temp_array[j:]
 
 	temp_inv = temp_array*stock_hist.trade_history[day_value]
+	#print len(temp_inv)
 	
 	stock_hist.trade_history[day_value +  " Investment"] = pd.Series(temp_inv, index=stock_hist.trade_history.index)
 
@@ -67,7 +65,7 @@ def main():
 	# convert all the string date into datetime class
 	for i in xrange(1, len(temp)):
 		temp[i][0] = datetime.datetime.strptime(temp[i][0],"%m/%d/%Y")
-
+ 
 	# convert list into numpy
 	data =  np.array(temp)#.astype(str)
 
@@ -92,25 +90,44 @@ def main():
 		# Convert all the dataa tonumber of shares
 		Investment_data(temp_ETF,Book)
 		
+		# Add the stock to the panel
 		#temp_ETF.plot_line(day_value="Close")
 		set_data[ticker] = temp_ETF.trade_history
-		#print temp_ETF.trade_history
 
 
+
+	# Check the size of data. Must be equal at all times
+	for ticker in Investment_ticker:
+ 		date_index = set_data[ticker].index
+		L = len(set_data[ticker])
+
+		try:
+			if L < prev_L:
+				for idx, val in enumerate(prev_dateI):
+					if val > date_index[0]:
+						i = idx
+						break
+				temp_col = list(set_data[ticker].columns.values)
+				temp_prev_data =  pd.DataFrame(data=np.zeros((len(prev_dateI[:i-1]), len(temp_col) )), index=prev_dateI[:i-1], columns=temp_col)
+				set_data[ticker] =  temp_prev_data.append(set_data[ticker])
+
+				continue
+		except UnboundLocalError:
+			pass 
+
+		prev_L = L
+		prev_dateI = date_index
+
+
+	# Convert data to Pandas
 	total_invest_data = pd.Panel(set_data)
 	
 	# set up total_invest data structure
-	#print total_invest_data[Investment_ticker[2]]["Close Investment"]
 	total_invest = total_invest_data[Investment_ticker[0]]["Close Investment"]
-	#print total_invest
 	for ticker in Investment_ticker[1:]:
-		#print total_invest_data[ticker]["Close Investment"]
 		total_invest = total_invest_data[ticker]["Close Investment"] + total_invest
 
-	#print total_invest
-
 	# Sum all the money invested
-	#print Book.index
 	Principal = []
 	for i in xrange(0,len(Book.index)):
 
