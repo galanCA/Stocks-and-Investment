@@ -28,8 +28,25 @@ def Investment_data(stock_hist, Book, day_value="Close"):
 		prev_frac = 0
 		if Book.iloc[i]["Ticker"] in ticker:
 			if "Sale" in Book.iloc[i]["Transaction"]:
-				continue
-				Share_frac = -float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/float(sub(r'[^\d.]', '', Book.iloc[i]["Share Price"][1:]))
+				#print Book.iloc[i].name
+				#continue
+				Date = Book.iloc[i].name
+
+				j=0
+				for d in stock_hist.trade_history.index:
+					if d >= Date and d <= Date:
+						break
+					j=j+1
+				if len(stock_hist.trade_history.index) == j:
+					j = 0
+					for d in stock_hist.trade_history.index:
+						if (d >= Date+ datetime.timedelta(1) and d <= Date+ datetime.timedelta(1)) or (d >= Date+ datetime.timedelta(2) and d <= Date+ datetime.timedelta(2)):
+							break
+						j=j+1
+
+				#print stock_hist.trade_history["Close"][j]
+				Share_frac = -float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/stock_hist.trade_history["Close"][j]#close price that day
+			
 			elif "Purchase" in Book.iloc[i]["Transaction"]:
 				Date = Book.iloc[i].name
 
@@ -156,8 +173,86 @@ def main():
 	ax.xaxis_date()
 	ax.autoscale_view()
 	plt.title("Total")
+	plt.legend(labels=["Investment","Principal"])
 	plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 	plt.grid()
+	#plt.show()
+
+	# Create Month to month ROI and year to year
+	#print Book.index
+	#print Principal 	
+	#print total_invest 
+
+	month_principal = []
+	month_date = []
+	for i, d in enumerate(Book.index):
+		try:
+			if d.month > prev_date.month and d.year == prev_date.year or d.year != prev_date.year:
+				# all shenanigans
+				#print i, d, d.month
+				#print Principal[i]
+				if d.day == 1:
+					k = i
+					#print "Month", d.month, Book.index[i] ,Principal[i]
+				else:
+					k= i-1
+					#print "Prev month", d.month,Book.index[i-1], Principal[i-1]
+
+				if d.month > prev_date.month+1:
+					dummy = prev_date.month+1
+					while dummy < d.month:
+						#print datetime.datetime(d.year,dummy,1), Principal[k]
+						month_date.append(datetime.datetime(d.year,dummy,1))
+						month_principal.append(Principal[k])
+						#print "miss month", dummy, Principal[k]
+						dummy = dummy+1
+
+				#Principal[k] 
+				#print datetime.datetime(d.year,d.month,1), Principal[k]
+				month_date.append(datetime.datetime(d.year,d.month,1))
+				month_principal.append(Principal[k])
+			prev_date = d
+		except UnboundLocalError:
+			prev_date = d
+			continue
+
+	total_invest_month = []
+	j = 0 
+	for index, d in enumerate(total_invest.index):
+		if j >= len(month_date):
+			break	
+		if month_date[j].month == d.month and month_date[j].year == d.year:
+			#print d, index, total_invest[index]  
+			j = j + 1
+			total_invest_month.append(total_invest[index])
+	
+	percent_month = []
+	ROI = []
+	for i in xrange(0,len(month_date)):
+		#print total_invest_month[i], month_principal[i]
+		percent_month.append((total_invest_month[i] - month_principal[i])/month_principal[i]*100.0)
+		ROI.append(total_invest_month[i] - month_principal[i])
+	
+	#percent_month=100.0*(total_invest_month - month_principal)/month_principal
+
+	weekFormatter = DateFormatter("%b %d '%y")#%H:%M:%S
+	fig, ax = plt.subplots()
+	fig.subplots_adjust(bottom=0.2)
+	ax.xaxis.set_major_formatter(weekFormatter)
+	plt.plot(month_date,ROI)
+	#fig.subplots_adjust()
+	ax.xaxis_date()
+	ax.autoscale_view()
+	plt.title("Total")
+	
+
+	#plt.legend(labels=["Investment","Principal"])
+	plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+	plt.grid()
+
+	ax2 = ax.twinx()
+	ax2.plot(month_date,percent_month,'g*-')
+
 	plt.show()
 
 
