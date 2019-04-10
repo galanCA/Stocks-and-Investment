@@ -216,6 +216,15 @@ def main():
 			prev_date = d
 			continue
 
+	# if the month already pass it and not investment has being made then it updates to the current month 
+	if datetime.datetime.today().month > Book.index[-1].month: 
+		print Book.index[-1],Principal[-1]
+		d_dummy = Book.index[-1]
+		month_date.append(datetime.datetime(d_dummy.year,d_dummy.month+1,1))
+		month_principal.append(Principal[-1])
+
+
+	# Investment
 	total_invest_month = []
 	j = 0 
 	for index, d in enumerate(total_invest.index):

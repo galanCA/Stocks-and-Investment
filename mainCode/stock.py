@@ -25,7 +25,9 @@ import argparse
 from collections import OrderedDict
 from time import sleep
 import datetime
+from yahoofinancials import YahooFinancials
 
+# Libraries with different names
 import pandas as pd
 import pandas_datareader.data as web
 
@@ -38,6 +40,80 @@ from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
      DayLocator, MONDAY, SecondLocator
 # from matplotlib.finance     
 #from mpl_finance import candlestick2, plot_day_summary, candlestick2
+
+class Fundamental_Analysis(object):
+	def __init__(self, ticker):
+		self.fundamentals = YahooFinancials(ticker)
+
+	def balance(self, timeline='annual'):
+		self.balance_stmts = self.__statements(timeline, 'balance')
+		return self.balance_stmts
+
+	def income(self, timeline='annual'):
+		self.income_stmts = self.__statements(timeline, 'income')
+		return self.income_stmts
+
+	def cash(self, timeline='annual'):
+		self.cash_stmts = self.__statements(timeline, 'cash')
+		return self.cash_stmts
+
+	def earnings(self):
+		raise Exception("To be developt")
+
+	
+
+	'''
+	### Valuations ####
+	'''
+
+	'''
+	### Financials ####
+	'''
+
+
+
+	'''
+	### Trading ####
+	'''
+
+	def __statements(self, timeline, type_stmts):
+		if "annual" in timeline or "quarterly" in timeline:
+			raw = self.fundamentals.get_financial_stmts(timeline, type_stmts)
+			stmts = self.__raw2pd(raw[raw.keys()[0]])
+			return stmts
+
+		else:
+			print("The timeline is not define correctly")
+
+	def __raw2pd(self,raw_data):
+		# Get all the list dont repeat
+		key_list = []
+		for sheet in raw_data[self.ticker]:
+			key = sheet.values()[0].keys()
+
+			tmp_list = list(set(key) - set(key_list))
+			key_list.extend(tmp_list)
+		
+
+		# Split the data for pd
+		date_index = []
+		data_pd = []
+		for sheet in raw_data[self.ticker]:
+			date_temp = sheet.keys()[0]
+			
+			date_index.append(date_temp)
+			temp_data = []
+			for tempKey in key_list:
+				try:
+					temp_data.append(sheet[date_temp][tempKey])
+				except KeyError:
+					temp_data.append(None)
+			data_pd.append(temp_data)
+
+		return pd.DataFrame(data=data_pd,
+					 index=date_index,
+					 columns=key_list)
+					
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
@@ -393,10 +469,11 @@ class Technical_Analysis(object):
 		plt.grid(True)
 		plt.show()
 
-class stock(Technical_Analysis):
+class stock(Technical_Analysis,Fundamental_Analysis):
 
 	def __init__(self, ticker, period=60, days=30, exchange='NASD', from_date=None, to_date=None):
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange, from_date=from_date, end_date=to_date)
+		Fundamental_Analysis.__init__(self, ticker)
 
 	def historic_data(self,ticker, period=60, days=1, from_date=None, to_date=None):
 		
@@ -567,12 +644,19 @@ def parent_classes():
 	#ETH.plot()
 
 def other_test():
-	
-
 	result = web.DataReader('AAPL', 'yahoo', '2018-01-01', '2019-01-01')
 	print result
-	
+
+def fundamental_test():
+	ticker =  "TSLA"
+	TSLA = stock(ticker)	
+	print TSLA.balance()
+	print TSLA.income()
+	print TSLA.cash()
+	print TSLA.cash('quarterly')
+
 if __name__=="__main__":
-	parent_classes()
+	#parent_classes()
 	#other_test()
+	fundamental_test()
 
