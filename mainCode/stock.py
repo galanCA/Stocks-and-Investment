@@ -16,26 +16,27 @@ Done:
 
 '''
 # Libraries
-from lxml import html  
 import requests
-from exceptions import ValueError
-from time import sleep
 import json
 import argparse
+import datetime
+import time
+import itertools
+
+from lxml import html  
+from exceptions import ValueError
+from time import sleep
 from collections import OrderedDict
 from time import sleep
-import datetime
 from yahoofinancials import YahooFinancials
 
 # Libraries with different names
 import pandas as pd
 import pandas_datareader.data as web
-
+import matplotlib.pyplot as plt
 
 # plot
 from pylab import *
-import matplotlib.pyplot as plt
-import time
 from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
      DayLocator, MONDAY, SecondLocator
 # from matplotlib.finance     
@@ -60,11 +61,77 @@ class Fundamental_Analysis(object):
 	def earnings(self):
 		raise Exception("To be developt")
 
-	
+	def outstandingShares(self):
+		self.outstanding_shares = self.fundamentals.get_num_shares_outstanding()
+		return self.outstanding_shares
 
+	'''
+	This all need to be added to a statements
+	'''
 	'''
 	### Valuations ####
 	'''
+	def EPS(self):
+		'''
+		EPS: Earnings per shares 
+
+		link: https://www.fool.com/knowledge-center/how-to-calculate-earnings-per-share-on-a-balance-s.aspx
+		'''
+		try:
+			self.income_stmts
+		except AttributeError:
+			self.income()
+
+		try:
+			self.outstanding_shares
+		except AttributeError:
+			self.outstandingShares()
+
+		try:
+			self.cash_stmts
+		except AttributeError:
+			self.cash()
+
+		# What if no dividends are paid
+		try:
+			for net_income, dividends in itertools.izip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
+				total_earnings = net_income+dividends
+				self.EPS = total_earnings/self.outstanding_shares
+		except:
+			for net_income  in self.income_stmts["netIncome"]:
+				total_earnings = net_income
+				self.EPS = total_earnings/self.outstanding_shares
+
+		return self.EPS
+
+	def bookValue(self):
+		'''
+		book value: tangable assets minus liabilities
+
+		https://www.investopedia.com/terms/b/bookvalue.asp
+		'''
+
+		try:
+			self.balance_stmts
+		except AttributeError:
+			self.balance()
+
+		print self.balance_stmts["totalAssets"]
+		print self.balance_stmts["intangibleAssets"]
+		print self.balance_stmts["totalLiab"]
+
+		'''
+		for net_income, dividends in itertools.izip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
+			total_earnings = net_income+dividends
+			self.EPS = total_earnings/self.outstanding_shares
+		'''
+		#print self.balance_stmts["netTangibleAssets"]
+
+		
+		
+	def trailingPE(self):
+		raise
+
 
 	'''
 	### Financials ####
@@ -113,8 +180,7 @@ class Fundamental_Analysis(object):
 		return pd.DataFrame(data=data_pd,
 					 index=date_index,
 					 columns=key_list)
-					
-
+	
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
@@ -648,12 +714,16 @@ def other_test():
 	print result
 
 def fundamental_test():
-	ticker =  "TSLA"
-	TSLA = stock(ticker)	
-	print TSLA.balance()
-	print TSLA.income()
-	print TSLA.cash()
-	print TSLA.cash('quarterly')
+	ticker =  "KO"
+	TRL = stock(ticker)	
+	#print TRL.balance()
+	#print TRL.income()
+	#print TRL.cash()
+	#print TRL.cash_stmts.columns
+	#print TRL.cash('quarterly')
+	#print TRL.EPS()
+	print TRL.bookValue()
+
 
 if __name__=="__main__":
 	#parent_classes()

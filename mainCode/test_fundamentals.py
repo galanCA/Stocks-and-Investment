@@ -12,6 +12,7 @@ Goal is to extract
 		Price/Book
 		Enterprise Value/Revenue
 		Enterprise Value/EBITDA
+		ROTS
 
 	Financials
 		Profit Margin
@@ -52,19 +53,23 @@ Goal is to extract
 
 '''
 
-ticker = 'TSLA'
+ticker = 'KO'
 YF = YahooFinancials(ticker)
 
 balance_sheet_data_qt = YF.get_financial_stmts('annual', 'balance')
-income_statement_data_qt = YF.get_financial_stmts('quarterly', 'income')
-all_statement_data_qt =  YF.get_financial_stmts('quarterly', ['income', 'cash', 'balance'])
+income_statement_data_qt = YF.get_financial_stmts('annual', 'income')
+cash_statement_data_qt = YF.get_financial_stmts('annual', 'cash')
+all_statement_data_qt =  YF.get_financial_stmts('annual', ['income', 'cash', 'balance'])
 apple_earnings_data = YF.get_stock_earnings_data()
+outstanding_share = YF.get_num_shares_outstanding()
 #apple_net_income = YF.get_net_income()
 #$historical_stock_prices = YF.get_historical_price_data('2008-09-15', '2018-09-15', 'weekly')
 
 print "Balance", balance_sheet_data_qt
 print "income statement", income_statement_data_qt
+print "cash statement", cash_statement_data_qt
 print "earnings", apple_earnings_data
+print outstanding_share
 #print "net income", apple_net_income
 #print "Prices", historical_stock_prices
 
