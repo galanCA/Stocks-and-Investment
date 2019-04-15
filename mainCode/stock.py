@@ -10,11 +10,64 @@ Todo:
 
 Working on:
 2) being able to get more than 2000 data points for crypto
+'''
+'''
+Goal is to extract 
+	Valuations measures
+		Market Cap - Done
+		Enterprise Value - Done
+		Trailing P/E
+		Foward P/E
+		PEG Ratio
+		Price/Sales 
+		Price/Book
+		Enterprise Value/Revenue
+		Enterprise Value/EBITDA
+		ROTS
+		Book Value - Done
 
-Done:
+	Financials
+		Profit Margin
+		Operating Margin
+		Return on Assets
+		Return on Equity
+		Revenue
+		Revenue Per share
+		Quaterly Revenue Growth
+		Gross Profit
+		EBITDA
+		Net Income Avi to Common
+		Dilute EPS
+		Quaterly Earnings Growth
+		Total Cash
+		Total Cash Per Share
+		Total Debt
+		Total Debt/Equity
+		Current Ratio
+		Book Value per share
+		Operating Cash Flow
+		Levered Free Cash Flow
+		EPS - Done
+
+	Trading informations
+		Beta
+		50-Day Moving Average
+		200 DayMoving Average
+		Avg Vol (3Month)
+		Shares Outstanding
+		Float
+		% Held by Insiders
+		% Held by institutions
+		Shares Shorts
+		Short Ratio
+		Short% of Float
+		Shares Shorts (Prior Month)
 
 
 '''
+
+
+
 # Libraries
 import requests
 import json
@@ -43,6 +96,7 @@ from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
 #from mpl_finance import candlestick2, plot_day_summary, candlestick2
 
 class Fundamental_Analysis(object):
+	# Create valuations, Financial and Trading information for pandas
 	def __init__(self, ticker):
 		self.fundamentals = YahooFinancials(ticker)
 
@@ -65,11 +119,73 @@ class Fundamental_Analysis(object):
 		self.outstanding_shares = self.fundamentals.get_num_shares_outstanding()
 		return self.outstanding_shares
 
+	def marketCap(self):
+		'''
+		get market cap through yahoo,
+
+		TODO: Calculate your own 
+		'''
+		self.market_cap = self.fundamentals.get_market_cap()
+		return self.market_cap
+
 	'''
-	This all need to be added to a statements
+	################# Information Derived from statements ####################
 	'''
 	'''
 	### Valuations ####
+	'''
+	def enterpriseValue(self):
+		'''
+		Enterprise Value: How much would it cost to buy the company outright
+
+		Link: https://www.investopedia.com/terms/e/enterprisevalue.asp
+		'''
+		# Check if data has being loaded
+		self.__createValuationMetrics()
+		self.__createMarketCap()
+		self.__createBalance()
+		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+
+		# check if statemnts values exists
+		self.__missingStatementInformation(self.balance_stmts,"shortLongTermDebt")
+		self.__missingStatementInformation(self.balance_stmts,"longTermDebt")
+		self.__missingStatementInformation(self.balance_stmts,"cash")
+
+		EV = []
+		for shortDebt, longDebt, cash_equivalents in itertools.izip(self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
+			total_debt = shortDebt + longDebt
+			EV.append(self.market_cap + total_debt - cash_equivalents)
+
+		self.valuations["EV"] = EV
+		return EV
+
+	def trailingPE(self):
+		raise
+		pass
+
+	def bookValue(self):
+		'''
+		book value: tangable assets minus liabilities
+		Tangable assets define as total assets minus intangable assets
+
+		https://www.investopedia.com/terms/b/bookvalue.asp
+		'''
+		# Check if the data has being loaded
+		self.__createBalance()
+		self.__createValuationMetrics()
+		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+
+		book_value = []
+		for total_assets, intangible_assets, total_liability in itertools.izip(self.balance_stmts["totalAssets"],self.balance_stmts["intangibleAssets"],self.balance_stmts["totalLiab"]):
+			tangable_assets = total_assets - intangible_assets
+			book_value.append(tangable_assets - total_liability)
+
+		self.valuations["book value"] = book_value
+
+		return book_value
+
+	'''
+	### Financials ####
 	'''
 	def EPS(self):
 		'''
@@ -77,71 +193,75 @@ class Fundamental_Analysis(object):
 
 		link: https://www.fool.com/knowledge-center/how-to-calculate-earnings-per-share-on-a-balance-s.aspx
 		'''
-		try:
-			self.income_stmts
-		except AttributeError:
-			self.income()
+		# Check if the data has being loaded
+		self.__createIncomeMetrics()
+		self.__createOutstandShMetrics()
+		self.__createCashMetrics()
+		self.__createFinancialMetrics()
+		self.__checkpdIndex(self.financial, self.income_stmts.index)
 
+		# Check statement values exists
+		self.__missingStatementInformation(self.cash_stmts,"dividendsPaid")
+		self.__missingStatementInformation(self.income_stmts,"netIncome")
+
+		EPS = []
+		
+		for net_income, dividends in itertools.izip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
+			total_earnings = net_income+dividends
+			EPS.append(total_earnings/self.outstanding_shares)
+
+		self.financial["EPS"] = EPS
+
+		return EPS
+
+	'''
+	### Trading ####
+	'''
+
+	'''
+	### Private Functions ###
+	'''
+	def __createOutstandShMetrics(self):
 		try:
 			self.outstanding_shares
 		except AttributeError:
 			self.outstandingShares()
 
+	def __createMarketCap(self):
+		try:
+			self.market_cap
+		except AttributeError:
+			self.marketCap()
+
+	def __createIncomeMetrics(self):
+		try:
+			self.income_stmts
+		except AttributeError:
+			self.income()
+
+	def __createCashMetrics(self):
 		try:
 			self.cash_stmts
 		except AttributeError:
 			self.cash()
 
-		# What if no dividends are paid
-		try:
-			for net_income, dividends in itertools.izip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
-				total_earnings = net_income+dividends
-				self.EPS = total_earnings/self.outstanding_shares
-		except:
-			for net_income  in self.income_stmts["netIncome"]:
-				total_earnings = net_income
-				self.EPS = total_earnings/self.outstanding_shares
-
-		return self.EPS
-
-	def bookValue(self):
-		'''
-		book value: tangable assets minus liabilities
-
-		https://www.investopedia.com/terms/b/bookvalue.asp
-		'''
-
+	def __createBalance(self):
 		try:
 			self.balance_stmts
 		except AttributeError:
 			self.balance()
 
-		print self.balance_stmts["totalAssets"]
-		print self.balance_stmts["intangibleAssets"]
-		print self.balance_stmts["totalLiab"]
+	def __createValuationMetrics(self):
+		try:
+			self.valuations
+		except AttributeError:
+			self.valuations = pd.DataFrame()
 
-		'''
-		for net_income, dividends in itertools.izip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
-			total_earnings = net_income+dividends
-			self.EPS = total_earnings/self.outstanding_shares
-		'''
-		#print self.balance_stmts["netTangibleAssets"]
-
-		
-		
-	def trailingPE(self):
-		raise
-
-
-	'''
-	### Financials ####
-	'''
-
-
-
-	'''
-	### Trading ####
-	'''
+	def __createFinancialMetrics(self):
+		try:
+			self.financial
+		except AttributeError:
+			self.financial = pd.DataFrame()
 
 	def __statements(self, timeline, type_stmts):
 		if "annual" in timeline or "quarterly" in timeline:
@@ -180,6 +300,21 @@ class Fundamental_Analysis(object):
 		return pd.DataFrame(data=data_pd,
 					 index=date_index,
 					 columns=key_list)
+
+	def __checkpdIndex(self, pd_frame, index):
+		if pd_frame.empty:
+			pd_frame["date"] = index
+			pd_frame.set_index('date', inplace=True)
+			return True
+
+		return False
+
+	def __missingStatementInformation(self, statement, colmn):
+		try:
+			statement[colmn]
+		except KeyError:
+			statement[colmn] = 0
+
 	
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
@@ -722,8 +857,9 @@ def fundamental_test():
 	#print TRL.cash_stmts.columns
 	#print TRL.cash('quarterly')
 	#print TRL.EPS()
-	print TRL.bookValue()
-
+	#print TRL.bookValue()
+	#print TRL.marketCap()
+	print TRL.enterpriseValue()
 
 if __name__=="__main__":
 	#parent_classes()
