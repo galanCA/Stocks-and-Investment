@@ -20,7 +20,7 @@ Goal is to extract
 		Foward P/E
 		PEG Ratio
 		Price/Sales 
-		Price/Book
+		Price/Book 
 		Enterprise Value/Revenue
 		Enterprise Value/EBITDA
 		ROTS
@@ -134,6 +134,22 @@ class Fundamental_Analysis(object):
 	'''
 	### Valuations ####
 	'''
+	def priceBookValue(self):
+		self.__createValuationMetrics()
+		self.__createMarketCap()
+
+		# Check statement values exists
+		if not self.__missingStatementInformation(self.valuations,"book value"):
+			self.bookValue()
+
+		PB = []
+		for book  in self.valuations["book value"]:
+			PB.append(self.market_cap/book)
+
+		self.valuations["PB"] = PB
+		return PB
+
+
 	def enterpriseValue(self):
 		'''
 		Enterprise Value: How much would it cost to buy the company outright
@@ -312,8 +328,10 @@ class Fundamental_Analysis(object):
 	def __missingStatementInformation(self, statement, colmn):
 		try:
 			statement[colmn]
+			return True
 		except KeyError:
 			statement[colmn] = 0
+			return False
 
 	
 class Technical_Analysis(object):
@@ -859,7 +877,12 @@ def fundamental_test():
 	#print TRL.EPS()
 	#print TRL.bookValue()
 	#print TRL.marketCap()
-	print TRL.enterpriseValue()
+	#print TRL.enterpriseValue()
+	print TRL.priceBookValue()
+
+
+	print TRL.valuations
+	#print TRL.trade_history
 
 if __name__=="__main__":
 	#parent_classes()
