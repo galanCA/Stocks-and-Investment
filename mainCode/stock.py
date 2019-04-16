@@ -16,12 +16,12 @@ Goal is to extract
 	Valuations measures
 		Market Cap - Done
 		Enterprise Value - Done
-		Trailing P/E
-		Foward P/E
-		PEG Ratio
+		Trailing P/E 
+		Foward P/E 
+		PEG Ratio 
 		Price/Sales 
 		Price/Book 
-		Enterprise Value/Revenue
+		Enterprise Value/Revenue - Done
 		Enterprise Value/EBITDA
 		ROTS
 		Book Value - Done
@@ -44,7 +44,7 @@ Goal is to extract
 		Total Debt
 		Total Debt/Equity
 		Current Ratio
-		Book Value per share
+		Book Value per share - Done
 		Operating Cash Flow
 		Levered Free Cash Flow
 		EPS - Done
@@ -98,6 +98,8 @@ from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
 class Fundamental_Analysis(object):
 	# Create valuations, Financial and Trading information for pandas
 	def __init__(self, ticker):
+		'''
+		'''
 		self.fundamentals = YahooFinancials(ticker)
 
 	def balance(self, timeline='annual'):
@@ -134,6 +136,28 @@ class Fundamental_Analysis(object):
 	'''
 	### Valuations ####
 	'''
+	def EVperRevenue(self):
+		'''
+		Enterprise Value per revenue: 
+		'''
+		# Check if data has being loaded
+		self.__createValuationMetrics()
+		self.__createIncomeMetrics()
+		
+		# check if statemnts values exists
+		if not self.__missingStatementInformation(self.valuations,"EV"):
+			self.enterpriseValue()
+
+		# Calculate
+		#print self.income_stmts["totalRevenue"]
+		ev_revenue =[]
+		for total_revenue, EV in itertools.izip(self.income_stmts["totalRevenue"], self.valuations["EV"]):
+			ev_revenue.append(EV/total_revenue)
+
+		self.valuations["ev_revenue"] = ev_revenue
+
+		return ev_revenue
+
 	def priceBookValue(self):
 		self.__createValuationMetrics()
 		self.__createMarketCap()
@@ -148,7 +172,6 @@ class Fundamental_Analysis(object):
 
 		self.valuations["PB"] = PB
 		return PB
-
 
 	def enterpriseValue(self):
 		'''
@@ -184,21 +207,27 @@ class Fundamental_Analysis(object):
 		book value: tangable assets minus liabilities
 		Tangable assets define as total assets minus intangable assets
 
+		Assuptions: Current outstanding shares are the same througout the years
+
 		https://www.investopedia.com/terms/b/bookvalue.asp
 		'''
 		# Check if the data has being loaded
 		self.__createBalance()
 		self.__createValuationMetrics()
+		self.__createOutstandShMetrics()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
 
 		book_value = []
+		book_value_per_share = []
 		for total_assets, intangible_assets, total_liability in itertools.izip(self.balance_stmts["totalAssets"],self.balance_stmts["intangibleAssets"],self.balance_stmts["totalLiab"]):
 			tangable_assets = total_assets - intangible_assets
 			book_value.append(tangable_assets - total_liability)
+			book_value_per_share.append((tangable_assets - total_liability)/self.outstanding_shares)
 
 		self.valuations["book value"] = book_value
+		self.valuations["book value per share"] = book_value_per_share
 
-		return book_value
+		return [book_value, book_value_per_share]
 
 	'''
 	### Financials ####
@@ -326,6 +355,9 @@ class Fundamental_Analysis(object):
 		return False
 
 	def __missingStatementInformation(self, statement, colmn):
+		'''
+		This is used to check if the information exist already in the pandas data frame
+		'''
 		try:
 			statement[colmn]
 			return True
@@ -867,7 +899,7 @@ def other_test():
 	print result
 
 def fundamental_test():
-	ticker =  "KO"
+	ticker =  "SPOT"
 	TRL = stock(ticker)	
 	#print TRL.balance()
 	#print TRL.income()
@@ -875,13 +907,14 @@ def fundamental_test():
 	#print TRL.cash_stmts.columns
 	#print TRL.cash('quarterly')
 	#print TRL.EPS()
-	#print TRL.bookValue()
+	print TRL.bookValue()
 	#print TRL.marketCap()
 	#print TRL.enterpriseValue()
 	print TRL.priceBookValue()
+	#print TRL.EVRevenue()
 
 
-	print TRL.valuations
+	#print TRL.valuations
 	#print TRL.trade_history
 
 if __name__=="__main__":
