@@ -1,3 +1,5 @@
+TOKEN
+*.pyc
 .htaccess
 css.php
 rpc/
