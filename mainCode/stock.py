@@ -6,7 +6,8 @@ Function: class to get stock data and crypto from multiples places
 
 Todo:
 1) plotting the correct date
-3) work on the 
+3) Add import EDGAR
+
 
 Working on:
 2) being able to get more than 2000 data points for crypto
@@ -31,7 +32,7 @@ Goal is to extract
 		Operating Margin
 		Return on Assets
 		Return on Equity
-		Revenue
+		Revenue - Income statement
 		Revenue Per share
 		Quaterly Revenue Growth
 		Gross Profit
@@ -48,6 +49,7 @@ Goal is to extract
 		Operating Cash Flow
 		Levered Free Cash Flow
 		EPS - Done
+		TTM
 
 	Trading informations
 		Beta
@@ -62,11 +64,7 @@ Goal is to extract
 		Short Ratio
 		Short% of Float
 		Shares Shorts (Prior Month)
-
-
 '''
-
-
 
 # Libraries
 import requests
@@ -115,6 +113,8 @@ class Fundamental_Analysis(object):
 		return self.cash_stmts
 
 	def earnings(self):
+		'''
+		'''
 		raise Exception("To be developt")
 
 	def outstandingShares(self):
@@ -199,7 +199,7 @@ class Fundamental_Analysis(object):
 		return EV
 
 	def trailingPE(self):
-		raise
+		raise Exception("To be developt")
 		pass
 
 	def bookValue(self):
@@ -232,6 +232,9 @@ class Fundamental_Analysis(object):
 	'''
 	### Financials ####
 	'''
+	def priceSalesRatio(self):
+		pass
+
 	def EPS(self):
 		'''
 		EPS: Earnings per shares 
@@ -365,7 +368,14 @@ class Fundamental_Analysis(object):
 			statement[colmn] = 0
 			return False
 
-	
+	def __downloadBalanceStockInformation(self):
+		'''
+		Create it to download the day trade of the balance sheet
+		'''
+		raise Exception("To be Developt")
+
+
+
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
