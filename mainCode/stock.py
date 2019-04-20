@@ -28,19 +28,19 @@ Goal is to extract
 		Book Value - Done
 
 	Financials
-		Profit Margin
-		Operating Margin
-		Return on Assets
+		Profit Margin				- To work on, might be on balance sheet
+		Operating Margin			- To work on, might be on balance sheet
+		Return on assets
 		Return on Equity
 		Revenue - Income statement
 		Revenue Per share
-		Quaterly Revenue Growth
+		Quaterly Revenue Growth 	
 		Gross Profit
-		EBITDA
+		EBITDA 						- To work on
 		Net Income Avi to Common
 		Dilute EPS
 		Quaterly Earnings Growth
-		Total Cash
+		Total Cash 
 		Total Cash Per Share
 		Total Debt
 		Total Debt/Equity
@@ -49,14 +49,14 @@ Goal is to extract
 		Operating Cash Flow
 		Levered Free Cash Flow
 		EPS - Done
-		TTM
+		TTM 						- To work on
 
 	Trading informations
 		Beta
 		50-Day Moving Average
 		200 DayMoving Average
 		Avg Vol (3Month)
-		Shares Outstanding
+		Shares Outstanding 			- last quaterly report - Done
 		Float
 		% Held by Insiders
 		% Held by institutions
@@ -200,6 +200,9 @@ class Fundamental_Analysis(object):
 		return EV
 
 	def trailingPE(self):
+		'''
+		trailing Price Earning ratio
+		'''
 		raise Exception("To be developt")
 		pass
 
@@ -259,6 +262,10 @@ class Fundamental_Analysis(object):
 		'''
 		raise Exception("To be developt")
 
+		# 
+		self.__missingStatementInformation(self.valuation, "EV")
+		self.__missingStatementInformation(self.financial, "EBITDA")
+
 	def ROTS(self):
 		'''
 		'''
@@ -267,8 +274,6 @@ class Fundamental_Analysis(object):
 	'''
 	### Financials ####
 	'''
-	
-
 	def EPS(self):
 		'''
 		EPS: Earnings per shares 
@@ -296,9 +301,24 @@ class Fundamental_Analysis(object):
 
 		return EPS
 
+	def EBITDA(self):
+		'''
+		No clue what this is
+		'''
+		raise Exception("To be Developt")
+
+	def TTM(self):
+		'''
+		'''
+		raise Exception("To be developt")
+
 	'''
 	### Trading ####
 	'''
+	def beta(self):
+		'''
+		'''
+		raise Exception("To be Developt")
 
 	'''
 	### Private Functions ###
