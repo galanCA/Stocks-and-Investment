@@ -17,14 +17,14 @@ Goal is to extract
 	Valuations measures
 		Market Cap - Done
 		Enterprise Value - Done
-		Trailing P/E 
-		Foward P/E 
-		PEG Ratio 
-		Price/Sales 
-		Price/Book 
+		Trailing P/E 			- To work on
+		Foward P/E 				- To work on
+		PEG Ratio 				- To work on
+		Price/Sales 			- To work on
+		Price/Book 				- To work on
 		Enterprise Value/Revenue - Done
-		Enterprise Value/EBITDA
-		ROTS
+		Enterprise Value/EBITDA - To work on - Developt EBITDA first 
+		ROTS 					- To work on
 		Book Value - Done
 
 	Financials
@@ -73,6 +73,7 @@ import argparse
 import datetime
 import time
 import itertools
+import numpy
 
 from lxml import html  
 from exceptions import ValueError
@@ -202,6 +203,13 @@ class Fundamental_Analysis(object):
 		raise Exception("To be developt")
 		pass
 
+	def fowardPE(self):
+		'''
+		foward PE ratio
+		'''
+
+		raise Exception("To be developt")
+
 	def bookValue(self):
 		'''
 		book value: tangable assets minus liabilities
@@ -229,11 +237,37 @@ class Fundamental_Analysis(object):
 
 		return [book_value, book_value_per_share]
 
+	def PEG(self):
+		'''
+		'''
+		raise Exception("To be developt")
+
+	def priceSalesRatio(self):
+		'''
+		price to sales ratio
+		'''
+		raise Exception("To be developt")
+
+	def priceBookRatio(self):
+		'''
+		price to book ratio: define as the 
+		'''
+		raise Exception("To be developt")
+
+	def enterpriseEBITDA(self):
+		'''
+		'''
+		raise Exception("To be developt")
+
+	def ROTS(self):
+		'''
+		'''
+		raise Exception("To be developt")
+
 	'''
 	### Financials ####
 	'''
-	def priceSalesRatio(self):
-		pass
+	
 
 	def EPS(self):
 		'''
@@ -368,11 +402,17 @@ class Fundamental_Analysis(object):
 			statement[colmn] = 0
 			return False
 
-	def __downloadBalanceStockInformation(self):
+	def __downloadBalanceStockInformation(self, Q_date, dataframe_sheet):
 		'''
 		Create it to download the day trade of the balance sheet
-		'''
+		''' 
 		raise Exception("To be Developt")
+		# Create empty list
+
+		# Download the data
+
+		# Store it in the balance dataframe
+
 
 
 
