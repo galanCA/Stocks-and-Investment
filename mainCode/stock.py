@@ -248,6 +248,15 @@ class Fundamental_Analysis(object):
 	def priceSalesRatio(self):
 		'''
 		price to sales ratio
+
+		Needs to find Sales number
+		'''
+		# Check pandas dataframe exist
+		'''
+		self.__createValuationMetrics()
+		self.__
+
+		self.__downloadBalanceStockInformation(self.balance_stmts)
 		'''
 		raise Exception("To be developt")
 
@@ -255,7 +264,15 @@ class Fundamental_Analysis(object):
 		'''
 		price to book ratio: define as the 
 		'''
-		raise Exception("To be developt")
+		#raise Exception("To be developt")
+		self.__createValuationMetrics()
+
+		if not self.__missingStatementInformation(self.valuations, "book value per share"):
+			self.bookValue()
+
+		self.__downloadBalanceStockInformation(self.balance_stmts)
+
+		
 
 	def enterpriseEBITDA(self):
 		'''
@@ -422,19 +439,19 @@ class Fundamental_Analysis(object):
 			statement[colmn] = 0
 			return False
 
-	def __downloadBalanceStockInformation(self, Q_date, dataframe_sheet):
+	def __downloadBalanceStockInformation(self, Q_sheet):
 		'''
 		Create it to download the day trade of the balance sheet
+		Todo test what is fastest Individual download or full download and the parse it
 		''' 
-		raise Exception("To be Developt")
-		# Create empty list
+		#raise Exception("To be Developt")
+		print Q_sheet.index
+
+		self._statementsTrade(Q_sheet.index)
 
 		# Download the data
 
 		# Store it in the balance dataframe
-
-
-
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
@@ -805,8 +822,25 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		else:
 			self.trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
 
-		# self.trade_history["High"]
-		# ITA.trade_history.index[0] Get date
+	def _statementsTrade(self, Q_dates):
+		# 
+		Qtrade = pd.DataFrame()
+		#print Qtrade
+		#print Q_dates
+		#print isinstance(datetime.datetime.strptime(Q_dates[2],"%Y-%m-%d"),datetime.datetime)
+		#a = datetime.datetime.strptime(Q_dates[2],"%Y-%m-%d") + datetime.timedelta(2)
+		hist = web.DataReader(self.ticker, 'yahoo', Q_dates[-1], Q_dates[0])
+		print hist[datetime.datetime.strptime(Q_dates[2],"%Y-%m-%d")]
+		'''
+		for qD, x in Q_dates.iterrows():
+			print "date check", qD
+			t = web.DataReader(self.ticker, 'yahoo', qD, qD)
+			print t
+
+		'''
+
+		return Qtrade
+		
 
 	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
@@ -977,12 +1011,13 @@ def fundamental_test():
 	#print TRL.cash_stmts.columns
 	#print TRL.cash('quarterly')
 	#print TRL.EPS()
-	print TRL.bookValue()
+	#print TRL.bookValue()
 	#print TRL.marketCap()
 	#print TRL.enterpriseValue()
-	print TRL.priceBookValue()
+	#print TRL.priceBookValue()
 	#print TRL.EVRevenue()
-
+	#print TRL.priceSalesRatio()
+	print TRL.priceBookRatio()
 
 	#print TRL.valuations
 	#print TRL.trade_history
