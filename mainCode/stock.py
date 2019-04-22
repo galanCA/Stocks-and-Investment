@@ -445,9 +445,10 @@ class Fundamental_Analysis(object):
 		Todo test what is fastest Individual download or full download and the parse it
 		''' 
 		#raise Exception("To be Developt")
-		print Q_sheet.index
+		#print Q_sheet
 
 		self._statementsTrade(Q_sheet.index)
+
 
 		# Download the data
 
@@ -823,22 +824,61 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 			self.trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
 
 	def _statementsTrade(self, Q_dates):
+		'''
+		Assumptions if the day is close get the previous day
+		'''
 		# 
 		Qtrade = pd.DataFrame()
-		#print Qtrade
-		#print Q_dates
-		#print isinstance(datetime.datetime.strptime(Q_dates[2],"%Y-%m-%d"),datetime.datetime)
-		#a = datetime.datetime.strptime(Q_dates[2],"%Y-%m-%d") + datetime.timedelta(2)
+		
+		################ Method 1: Load everthing and then look #####################
+		# Faster but not bulletproof
+
+		#t_start = time.time()
 		hist = web.DataReader(self.ticker, 'yahoo', Q_dates[-1], Q_dates[0])
-		print hist[datetime.datetime.strptime(Q_dates[2],"%Y-%m-%d")]
-		'''
-		for qD, x in Q_dates.iterrows():
-			print "date check", qD
-			t = web.DataReader(self.ticker, 'yahoo', qD, qD)
-			print t
+		for qD in Q_dates:
+			try:
+				Qtrade = Qtrade.append(hist.loc[qD])
+			except KeyError:
+				# it fail because that day the stock market was close
+				prev_d = datetime.datetime.strptime(qD,"%Y-%m-%d") - datetime.timedelta(1)
+				print prev_d.weekday()
+				# check to see that is not a weekend
+				while prev_d.weekday() == 6 or prev_d.weekday() == 5:
+					prev_d = prev_d - datetime.timedelta(1)
+				try:
+					Qtrade = Qtrade.append(hist.loc[prev_d.strftime("%Y-%m-%d")])
 
-		'''
+				except KeyError:
+					# Find how to tell if there is no data
+					if hist.tail(1).index[0] > prev_d:
+						print Qtrade
 
+					raise
+		#t_end = time.time()
+		#print "Method 1", t_end-t_start
+		##############################################################################
+
+		######################### Method 2: Load one by one ##########################
+		# Slower but more robost
+		'''
+		t_start = time.time()
+		for qD in Q_dates:
+			try:
+				Qtrade = Qtrade.append(web.DataReader(self.ticker, 'yahoo', qD, qD))
+
+			except KeyError:
+				# it fail because that day the stock market was close
+				prev_d = datetime.datetime.strptime(qD,"%Y-%m-%d") - datetime.timedelta(1)
+				# check to see that is not a weekend
+				while prev_d.weekday() == 6 or prev_d.weekday() == 5:
+					prev_d = prev_d - datetime.timedelta(1)
+				
+				Qtrade = Qtrade.append(web.DataReader(self.ticker, 'yahoo', prev_d, prev_d))
+		t_end = time.time()
+		print "Method 2 ", t_end-t_start
+		'''
+		################################################################################
+		
 		return Qtrade
 		
 
@@ -1022,8 +1062,15 @@ def fundamental_test():
 	#print TRL.valuations
 	#print TRL.trade_history
 
+def time_lookup_day_values():
+	ticker = ["KO","TSLA","SPOT"]
+	for T in ticker:
+		TRL = stock(T)	
+		TRL.priceBookRatio()
+
 if __name__=="__main__":
 	#parent_classes()
 	#other_test()
 	fundamental_test()
+	#time_lookup_day_values()
 
