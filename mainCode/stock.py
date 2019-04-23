@@ -87,6 +87,7 @@ import pandas as pd
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
 pd.set_option('mode.chained_assignment', None)
+
 # plot
 from pylab import *
 from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
@@ -262,15 +263,24 @@ class Fundamental_Analysis(object):
 
 	def priceBookRatio(self):
 		'''
-		price to book ratio: define as the 
+		price to book ratio: define as price per share over book value per share
 		'''
-		#raise Exception("To be developt")
 		self.__createValuationMetrics()
 
 		if not self.__missingStatementInformation(self.valuations, "book value per share"):
 			self.bookValue()
 
-		self.__downloadBalanceStockInformation(self.balance_stmts)		
+		if not self.__missingStatementInformation(self.balance_stmts, "Close"):
+			self.__downloadBalanceStockInformation(self.balance_stmts)
+
+		PB = []
+
+		for close, bps in itertools.izip(self.balance_stmts["Close"], self.valuations["book value per share"]):
+			PB.append(close/bps)
+
+		self.valuations["Price-Book"] = PB
+
+		return PB
 
 	def enterpriseEBITDA(self):
 		'''
@@ -442,17 +452,15 @@ class Fundamental_Analysis(object):
 		Create it to download the day trade of the balance sheet
 		Todo test what is fastest Individual download or full download and the parse it
 		''' 
-		day_data = self._statementsTrade(Q_sheet.index)
-		print "Day data", day_data
-		print "", day_data.columns
-		print day_data[day_data.columns[0]][0:]
-
-		Q_sheet[day_data.columns[0]] = day_data[day_data.columns[0]][0]
-		print Q_sheet
-
 		# Download the data
+		day_data = self._statementsTrade(Q_sheet.index)
+		#print "Day data", day_data
+		#print "", day_data.columns
+		#print day_data[day_data.columns[0]].tolist()
 
 		# Store it in the balance dataframe
+		for cl in day_data.columns:
+			Q_sheet[cl] = day_data[cl].tolist()
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
@@ -886,7 +894,6 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		
 		return Qtrade
 		
-
 	def historic_data_google(self, period=60, days=1, exchange='NASD'):
 		url = 'https://finance.google.com/finance/getprices' + \
 			'?p={days}d&f=d,o,h,l,c,v&q={ticker}&i={period}&x={exchange}'.format(ticker=self.ticker, 
@@ -1063,6 +1070,7 @@ def fundamental_test():
 	#print TRL.EVRevenue()
 	#print TRL.priceSalesRatio()
 	print TRL.priceBookRatio()
+	#print TRL.balance_stmts
 
 	#print TRL.valuations
 	#print TRL.trade_history
