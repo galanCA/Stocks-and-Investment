@@ -86,7 +86,7 @@ from yahoofinancials import YahooFinancials
 import pandas as pd
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
-
+pd.set_option('mode.chained_assignment', None)
 # plot
 from pylab import *
 from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
@@ -270,9 +270,7 @@ class Fundamental_Analysis(object):
 		if not self.__missingStatementInformation(self.valuations, "book value per share"):
 			self.bookValue()
 
-		self.__downloadBalanceStockInformation(self.balance_stmts)
-
-		
+		self.__downloadBalanceStockInformation(self.balance_stmts)		
 
 	def enterpriseEBITDA(self):
 		'''
@@ -444,11 +442,13 @@ class Fundamental_Analysis(object):
 		Create it to download the day trade of the balance sheet
 		Todo test what is fastest Individual download or full download and the parse it
 		''' 
-		#raise Exception("To be Developt")
-		#print Q_sheet
+		day_data = self._statementsTrade(Q_sheet.index)
+		print "Day data", day_data
+		print "", day_data.columns
+		print day_data[day_data.columns[0]][0:]
 
-		self._statementsTrade(Q_sheet.index)
-
+		Q_sheet[day_data.columns[0]] = day_data[day_data.columns[0]][0]
+		print Q_sheet
 
 		# Download the data
 
@@ -841,7 +841,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 			except KeyError:
 				# it fail because that day the stock market was close
 				prev_d = datetime.datetime.strptime(qD,"%Y-%m-%d") - datetime.timedelta(1)
-				print prev_d.weekday()
+
 				# check to see that is not a weekend
 				while prev_d.weekday() == 6 or prev_d.weekday() == 5:
 					prev_d = prev_d - datetime.timedelta(1)
@@ -850,10 +850,15 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 
 				except KeyError:
 					# Find how to tell if there is no data
-					if hist.tail(1).index[0] > prev_d:
-						print Qtrade
+					if hist.head(1).index[0] > prev_d:
+						#print "Tail", hist.head(1)
+						head_top = hist.loc[hist.head(1).index[0]]
+						head_top.iloc[:] = NaN
+						head_top.name = prev_d
+						Qtrade = Qtrade.append(head_top, sort=False)
 
-					raise
+
+					#raise
 		#t_end = time.time()
 		#print "Method 1", t_end-t_start
 		##############################################################################
@@ -1043,7 +1048,7 @@ def other_test():
 	print result
 
 def fundamental_test():
-	ticker =  "SPOT"
+	ticker =  "KO"
 	TRL = stock(ticker)	
 	#print TRL.balance()
 	#print TRL.income()
