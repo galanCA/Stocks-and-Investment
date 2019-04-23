@@ -15,28 +15,28 @@ Working on:
 '''
 Goal is to extract 
 	Valuations measures
-		Market Cap - Done
-		Enterprise Value - Done
-		Trailing P/E 			- To work on
-		Foward P/E 				- To work on
-		PEG Ratio 				- To work on
-		Price/Sales 			- To work on
-		Price/Book 				- To work on
-		Enterprise Value/Revenue - Done
-		Enterprise Value/EBITDA - To work on - Developt EBITDA first 
-		ROTS 					- To work on
-		Book Value - Done
+		Market Cap 					- Done
+		Enterprise Value 			- Done
+		Trailing P/E 				- To work on
+		Foward P/E 					- To work on
+		PEG Ratio 					- To work on
+		Price/Sales 				- Done
+		Price/Book 					- Done
+		Enterprise Value/Revenue 	- Done
+		Enterprise Value/EBITDA 	- To work on - Developt EBITDA first 
+		ROTS 						- To work on
+		Book Value 					- Done
 
 	Financials
 		Profit Margin				- To work on, might be on balance sheet
 		Operating Margin			- To work on, might be on balance sheet
 		Return on assets
 		Return on Equity
-		Revenue - Income statement
-		Revenue Per share
+		Revenue 					- Income statement
+		Revenue Per Share 			- Done 
 		Quaterly Revenue Growth 	
 		Gross Profit
-		EBITDA 						- To work on
+		EBITDA						- To work on
 		Net Income Avi to Common
 		Dilute EPS
 		Quaterly Earnings Growth
@@ -44,11 +44,11 @@ Goal is to extract
 		Total Cash Per Share
 		Total Debt
 		Total Debt/Equity
-		Current Ratio
-		Book Value per share - Done
+		Current Ratio 				- Done
+		Book Value per share 		- Done
 		Operating Cash Flow
 		Levered Free Cash Flow
-		EPS - Done
+		EPS 						- Done
 		TTM 						- To work on
 
 	Trading informations
@@ -137,6 +137,8 @@ class Fundamental_Analysis(object):
 	'''
 	'''
 	### Valuations ####
+	self.__createValuationMetrics()
+	self.valuations
 	'''
 	def EVperRevenue(self):
 		'''
@@ -158,7 +160,7 @@ class Fundamental_Analysis(object):
 
 		self.valuations["ev_revenue"] = ev_revenue
 
-		return ev_revenue
+		return self.valuations["ev_revenue"]
 
 	def priceBookValue(self):
 		self.__createValuationMetrics()
@@ -169,11 +171,11 @@ class Fundamental_Analysis(object):
 			self.bookValue()
 
 		PB = []
-		for book  in self.valuations["book value"]:
-			PB.append(self.market_cap/book)
+		for book in self.valuations["book value"]:
+			PB.append(float(self.market_cap)/float(book))
 
 		self.valuations["PB"] = PB
-		return PB
+		return self.valuations["PB"]
 
 	def enterpriseValue(self):
 		'''
@@ -184,7 +186,7 @@ class Fundamental_Analysis(object):
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createMarketCap()
-		self.__createBalance()
+		self.__createBalanceMetrics()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
 
 		# check if statemnts values exists
@@ -198,7 +200,7 @@ class Fundamental_Analysis(object):
 			EV.append(self.market_cap + total_debt - cash_equivalents)
 
 		self.valuations["EV"] = EV
-		return EV
+		return self.valuations["EV"]
 
 	def trailingPE(self):
 		'''
@@ -224,7 +226,7 @@ class Fundamental_Analysis(object):
 		https://www.investopedia.com/terms/b/bookvalue.asp
 		'''
 		# Check if the data has being loaded
-		self.__createBalance()
+		self.__createBalanceMetrics()
 		self.__createValuationMetrics()
 		self.__createOutstandShMetrics()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
@@ -239,7 +241,7 @@ class Fundamental_Analysis(object):
 		self.valuations["book value"] = book_value
 		self.valuations["book value per share"] = book_value_per_share
 
-		return [book_value, book_value_per_share]
+		return [self.valuations["book value"], self.valuations["book value per share"]]
 
 	def PEG(self):
 		'''
@@ -259,19 +261,40 @@ class Fundamental_Analysis(object):
 
 		self.__downloadBalanceStockInformation(self.balance_stmts)
 		'''
-		raise Exception("To be developt")
+		self.__createFinancialMetrics()
+		self.__createValuationMetrics()
+		self.__createBalanceMetrics()
+
+		if not self.__missingStatementInformation(self.financial, "revenue-per-share"):
+			self.RevenuePerShare()
+
+		if not self.__missingStatementInformation(self.balance_stmts, "Close"):
+			self.__downloadBalanceStockInformation(self.balance_stmts)
+
+		PS = []
+
+		for rps, close in itertools.izip(self.financial["revenue-per-share"], self.balance_stmts["Close"]):
+			PS.append(close/rps)
+
+		self.valuations["price-per-sale"] = PS
+
+		return self.valuations["price-per-sale"]
+
+
+		#raise Exception("To be developt")
 
 	def priceBookRatio(self):
 		'''
 		price to book ratio: define as price per share over book value per share
 		'''
 		self.__createValuationMetrics()
+		self.__checkpdIndex(self.valuations, self.income_stmts.index)
 
 		if not self.__missingStatementInformation(self.valuations, "book value per share"):
 			self.bookValue()
 
-		if not self.__missingStatementInformation(self.balance_stmts, "Close"):
-			self.__downloadBalanceStockInformation(self.balance_stmts)
+		if not self.__missingStatementInformation(self.income_stmts, "Close"):
+			self.__downloadBalanceStockInformation(self.income_stmts)
 
 		PB = []
 
@@ -280,7 +303,7 @@ class Fundamental_Analysis(object):
 
 		self.valuations["Price-Book"] = PB
 
-		return PB
+		return self.valuations["Price-Book"]
 
 	def enterpriseEBITDA(self):
 		'''
@@ -298,7 +321,41 @@ class Fundamental_Analysis(object):
 
 	'''
 	### Financials ####
+	self.__createFinancialMetrics()
+	self.financial
 	'''
+	def currentRatio(self):
+		'''
+		'''
+		self.__createFinancialMetrics()
+		self.__createBalanceMetrics()
+		self.__checkpdIndex(self.financial, self.balance_stmts.index)
+
+		current_ratio = []
+		for assets, liabilities in itertools.izip(self.balance_stmts["totalCurrentAssets"],self.balance_stmts["totalCurrentLiabilities"]):
+			current_ratio.append(float(assets)/float(liabilities))
+
+		self.financial["current-ratio"] = current_ratio
+
+		return self.financial["current-ratio"]
+
+	def RevenuePerShare(self):
+		'''
+		Revenue per share or sales per shares: 
+
+		'''
+		self.__createFinancialMetrics()
+		self.__createIncomeMetrics()
+		self.__createOutstandShMetrics()
+		self.__checkpdIndex(self.financial, self.income_stmts.index)
+
+		revenue_per_share = []
+		for revenue in self.income_stmts["totalRevenue"]:
+			revenue_per_share.append(revenue/self.outstanding_shares)
+
+		self.financial["revenue-per-share"] = revenue_per_share
+		return self.financial["revenue-per-share"]
+
 	def EPS(self):
 		'''
 		EPS: Earnings per shares 
@@ -324,7 +381,7 @@ class Fundamental_Analysis(object):
 
 		self.financial["EPS"] = EPS
 
-		return EPS
+		return self.financial["EPS"]
 
 	def EBITDA(self):
 		'''
@@ -372,7 +429,7 @@ class Fundamental_Analysis(object):
 		except AttributeError:
 			self.cash()
 
-	def __createBalance(self):
+	def __createBalanceMetrics(self):
 		try:
 			self.balance_stmts
 		except AttributeError:
@@ -1060,23 +1117,27 @@ def fundamental_test():
 	#print TRL.balance()
 	#print TRL.income()
 	#print TRL.cash()
-	#print TRL.cash_stmts.columns
 	#print TRL.cash('quarterly')
 	#print TRL.EPS()
 	#print TRL.bookValue()
 	#print TRL.marketCap()
 	#print TRL.enterpriseValue()
 	#print TRL.priceBookValue()
-	#print TRL.EVRevenue()
+	#print TRL.EVperRevenue()
 	#print TRL.priceSalesRatio()
-	print TRL.priceBookRatio()
-	#print TRL.balance_stmts
+	#print TRL.priceBookRatio()
+	#print TRL.RevenuePerShare()
+	#print TRL.priceSalesRatio()
+	print TRL.currentRatio()
+	#print TRL
 
-	#print TRL.valuations
+
+	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
 	#print TRL.trade_history
+	print TRL.financial
 
 def time_lookup_day_values():
-	ticker = ["KO","TSLA","SPOT"]
+	ticker = ["KO","TSLA","SPOT", "SNAP"]
 	for T in ticker:
 		TRL = stock(T)	
 		TRL.priceBookRatio()
