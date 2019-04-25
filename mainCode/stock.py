@@ -308,10 +308,11 @@ class Fundamental_Analysis(object):
 	def enterpriseEBITDA(self):
 		'''
 		'''
-		raise Exception("To be developt")
+		#raise Exception("To be developt")
 
 		# 
-		self.__missingStatementInformation(self.valuation, "EV")
+		self.__createValuationMetrics()
+		self.__missingStatementInformation(self.valuations, "EV")
 		self.__missingStatementInformation(self.financial, "EBITDA")
 
 	def ROTS(self):
@@ -387,7 +388,19 @@ class Fundamental_Analysis(object):
 		'''
 		No clue what this is
 		'''
-		raise Exception("To be Developt")
+		#raise Exception("To be Developt")
+
+		self.__createFinancialMetrics()
+		self.__createIncomeMetrics()
+		self.__createBalanceMetrics()
+		self.__createCashMetrics()
+		self.__checkpdIndex(self.financial, self.income_stmts.index)
+		self.__missingStatementInformation(self.balance_stmts,"amortication")
+
+		print self.income_stmts["ebit"]
+		print self.income_stmts["netIncome"]
+		print self.income_stmts["interestExpense"]
+		print self.cash_stmts["depreciation"]
 
 	def TTM(self):
 		'''
@@ -501,7 +514,7 @@ class Fundamental_Analysis(object):
 			statement[colmn]
 			return True
 		except KeyError:
-			statement[colmn] = 0
+			statement[colmn] = NaN
 			return False
 
 	def __downloadBalanceStockInformation(self, Q_sheet):
@@ -1128,13 +1141,14 @@ def fundamental_test():
 	#print TRL.priceBookRatio()
 	#print TRL.RevenuePerShare()
 	#print TRL.priceSalesRatio()
-	print TRL.currentRatio()
-	#print TRL
+	#print TRL.currentRatio()
+	print TRL.EBITDA()
+	print TRL.enterpriseEBITDA()
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
 	#print TRL.trade_history
-	print TRL.financial
+	#print TRL.financial
 
 def time_lookup_day_values():
 	ticker = ["KO","TSLA","SPOT", "SNAP"]
