@@ -134,6 +134,7 @@ class Fundamental_Analysis(object):
 	'''
 	################# Information Derived from statements ####################
 	'''
+	
 	'''
 	### Valuations ####
 	self.__createValuationMetrics()

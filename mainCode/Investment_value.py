@@ -1,6 +1,6 @@
 # Add new path
 import sys
-sys.path.append('C:\\Users\\Cesar Workdesk\\Documents\\Projects\\Lab-inventory\\mainCode\\')
+sys.path.append('C:\\Users\\Cesar Workdesk\\Documents\\Projects\\Py2GoogleDrive\\mainCode\\')
 
 # Build/Import libraries
 from google_sheet_class import Gsheet
@@ -24,11 +24,11 @@ MAINSPREADSHEET_ID = '1wUBzSk-RY2fQC2Rri06v-ZJ6oHjwmhIIgBYVxncaUms'
 def Investment_data(stock_hist, Book, day_value="Close"):
 	ticker  = stock_hist.ticker 
 	temp_array = np.zeros(len(stock_hist.trade_history.index) )
-	for i in xrange(0,len(Book)):
+	for i in range(0,len(Book)):
 		prev_frac = 0
 		if Book.iloc[i]["Ticker"] in ticker:
 			if "Sale" in Book.iloc[i]["Transaction"]:
-				#print Book.iloc[i].name
+				#print (Book.iloc[i].name)
 				#continue
 				Date = Book.iloc[i].name
 
@@ -44,7 +44,7 @@ def Investment_data(stock_hist, Book, day_value="Close"):
 							break
 						j=j+1
 
-				#print stock_hist.trade_history["Close"][j]
+				#print (stock_hist.trade_history["Close"][j])
 				Share_frac = -float(sub(r'[^\d.]', '', Book.iloc[i]["Amount"][1:]))/stock_hist.trade_history["Close"][j]#close price that day
 			
 			elif "Purchase" in Book.iloc[i]["Transaction"]:
@@ -66,7 +66,7 @@ def Investment_data(stock_hist, Book, day_value="Close"):
 			temp_array[j:] = Share_frac + temp_array[j:]
 
 	temp_inv = temp_array*stock_hist.trade_history[day_value]
-	#print len(temp_inv)
+	#print (len(temp_inv))
 	
 	stock_hist.trade_history[day_value +  " Investment"] = pd.Series(temp_inv, index=stock_hist.trade_history.index)
 
@@ -75,12 +75,12 @@ def main():
 	# Extract the data from g sheets
 	test = Gsheet(MAINSPREADSHEET_ID)
 	raw = test.get_values()
-
+	
 	# convert the data to list 
-	temp = [[c.encode() for c in r] for r in raw]
+	temp = [[c for c in r] for r in raw]
 
 	# convert all the string date into datetime class
-	for i in xrange(1, len(temp)):
+	for i in range(1, len(temp)):
 		temp[i][0] = datetime.datetime.strptime(temp[i][0],"%m/%d/%Y")
  
 	# convert list into numpy
@@ -96,11 +96,11 @@ def main():
 
 	# Get the stock data
 	# Book.index[0]+datetime.timedelta(15)
-	#print Investment_ticker
+	#print (Investment_ticker)
 	set_data = {}
-	print "Loading stock history"
+	print ("Loading stock history")
 	for ticker in Investment_ticker:
-		print ticker
+		print (ticker)
 		temp_ETF = stock(ticker,from_date=Book.index[0],to_date=datetime.datetime.today())
 		
 
@@ -115,7 +115,7 @@ def main():
 
 	# Check the size of data. Must be equal at all times
 	for ticker in Investment_ticker:
- 		date_index = set_data[ticker].index
+		date_index = set_data[ticker].index
 		L = len(set_data[ticker])
 
 		try:
@@ -146,7 +146,7 @@ def main():
 
 	# Sum all the money invested
 	Principal = []
-	for i in xrange(0,len(Book.index)):
+	for i in range(0,len(Book.index)):
 
 		if "Purchase" in Book.iloc[i]["Transaction"]:
 			if i == 0:
@@ -179,9 +179,9 @@ def main():
 	#plt.show()
 
 	# Create Month to month ROI and year to year
-	#print Book.index
-	#print Principal 	
-	#print total_invest 
+	#print (Book.index)
+	#print (Principal)
+	#print (total_invest )
 
 	month_principal = []
 	month_date = []
@@ -189,26 +189,26 @@ def main():
 		try:
 			if d.month > prev_date.month and d.year == prev_date.year or d.year != prev_date.year:
 				# all shenanigans
-				#print i, d, d.month
-				#print Principal[i]
+				#print (i, d, d.month)
+				#print (Principal[i])
 				if d.day == 1:
 					k = i
-					#print "Month", d.month, Book.index[i] ,Principal[i]
+					#print ("Month", d.month, Book.index[i] ,Principal[i])
 				else:
 					k= i-1
-					#print "Prev month", d.month,Book.index[i-1], Principal[i-1]
+					#print ("Prev month", d.month,Book.index[i-1], Principal[i-1])
 
 				if d.month > prev_date.month+1:
 					dummy = prev_date.month+1
 					while dummy < d.month:
-						#print datetime.datetime(d.year,dummy,1), Principal[k]
+						#print (datetime.datetime(d.year,dummy,1), Principal[k])
 						month_date.append(datetime.datetime(d.year,dummy,1))
 						month_principal.append(Principal[k])
-						#print "miss month", dummy, Principal[k]
+						#print ("miss month", dummy, Principal[k])
 						dummy = dummy+1
 
 				#Principal[k] 
-				#print datetime.datetime(d.year,d.month,1), Principal[k]
+				#print (datetime.datetime(d.year,d.month,1), Principal[k])
 				month_date.append(datetime.datetime(d.year,d.month,1))
 				month_principal.append(Principal[k])
 			prev_date = d
@@ -218,7 +218,7 @@ def main():
 
 	# if the month already pass it and not investment has being made then it updates to the current month 
 	if datetime.datetime.today().month > Book.index[-1].month: 
-		print Book.index[-1],Principal[-1]
+		print (Book.index[-1],Principal[-1])
 		d_dummy = Book.index[-1]
 		month_date.append(datetime.datetime(d_dummy.year,d_dummy.month+1,1))
 		month_principal.append(Principal[-1])
@@ -231,14 +231,14 @@ def main():
 		if j >= len(month_date):
 			break	
 		if month_date[j].month == d.month and month_date[j].year == d.year:
-			#print d, index, total_invest[index]  
+			#print (d, index, total_invest[index]  )
 			j = j + 1
 			total_invest_month.append(total_invest[index])
 	
 	percent_month = []
 	ROI = []
-	for i in xrange(0,len(month_date)):
-		#print total_invest_month[i], month_principal[i]
+	for i in range(0,len(month_date)):
+		#print (total_invest_month[i], month_principal[i])
 		percent_month.append((total_invest_month[i] - month_principal[i])/month_principal[i]*100.0)
 		ROI.append(total_invest_month[i] - month_principal[i])
 	
