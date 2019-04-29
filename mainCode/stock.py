@@ -75,8 +75,7 @@ import time
 import itertools
 import numpy
 
-from lxml import html  
-from exceptions import ValueError
+from lxml import html 
 from time import sleep
 from collections import OrderedDict
 from time import sleep
@@ -397,10 +396,10 @@ class Fundamental_Analysis(object):
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
 		self.__missingStatementInformation(self.balance_stmts,"amortication")
 
-		print self.income_stmts["ebit"]
-		print self.income_stmts["netIncome"]
-		print self.income_stmts["interestExpense"]
-		print self.cash_stmts["depreciation"]
+		print(self.income_stmts["ebit"])
+		print(self.income_stmts["netIncome"])
+		print(self.income_stmts["interestExpense"])
+		print(self.cash_stmts["depreciation"])
 
 	def TTM(self):
 		'''
@@ -556,7 +555,7 @@ class Technical_Analysis(object):
 				return None
 		except:
 			pass
-		print self.trade_history
+		print(self.trade_history)
 		keys = self.trade_history[0].keys()
 
 		t0  = datetime.datetime(1970,1,1)
@@ -627,15 +626,15 @@ class Technical_Analysis(object):
 
 		elif interval.days:
 			j =  interval.days*3600 
-			print j
+			print (j)
 
 			L = len(self.trade_history["date"])
-			print "Length ",L
+			print ("Length ",L)
 			for i in xrange(0, L, j):
 				if (i+j) > L:
 					j = L-i-1
 
-				print i, i+j
+				print (i, i+j)
 				trade_interval["date"].append(self.trade_history["date"][i])
 				trade_interval["open"].append(self.trade_history["open"][i])
 				trade_interval["high"].append(max(self.trade_history["high"][i:i+j]))
@@ -664,7 +663,7 @@ class Technical_Analysis(object):
 				current_support = self.trade_history[i]["close"]
 				if self.trade_history[i+1]["close"] > current_support:
 					breach_count = breach_count + 1
-					print "Breach Count incremented: ", breach_count
+					print ("Breach Count incremented: ", breach_count)
 
 
 			breach_number.append(breach_count)
@@ -973,7 +972,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 
 		response = requests.get(url)
 		content = response.content.splitlines()
-		print content 
+		print (content) 
 
 		date = []
 		opend = []
@@ -1022,7 +1021,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		try:
 			data = json.loads(html[Ibegin:Iend])
 		except:
-			print "broken self"
+			print ("broken self")
 			raise
 
 		return data
@@ -1083,10 +1082,10 @@ class cryptocurrency(Technical_Analysis):
 ########### Test Cases ##############
 def testStockProperties():
 	ticker = 'ITA'
-	print "Fetching data for %s"%(ticker)
+	print ("Fetching data for %s"%(ticker))
 	scraped_data = ETF_parse(ticker)
-	print "Writing data to output file"
-	print "Data: ", scraped_data 
+	print ("Writing data to output file")
+	print ("Data: ", scraped_data )
 
 def historicTest():
 	#ticker = 'ITA'
@@ -1122,28 +1121,28 @@ def parent_classes():
 
 def other_test():
 	result = web.DataReader('AAPL', 'yahoo', '2018-01-01', '2019-01-01')
-	print result
+	print (result)
 
 def fundamental_test():
 	ticker =  "KO"
 	TRL = stock(ticker)	
-	#print TRL.balance()
-	#print TRL.income()
-	#print TRL.cash()
-	#print TRL.cash('quarterly')
-	#print TRL.EPS()
-	#print TRL.bookValue()
-	#print TRL.marketCap()
-	#print TRL.enterpriseValue()
-	#print TRL.priceBookValue()
-	#print TRL.EVperRevenue()
-	#print TRL.priceSalesRatio()
-	#print TRL.priceBookRatio()
-	#print TRL.RevenuePerShare()
-	#print TRL.priceSalesRatio()
-	#print TRL.currentRatio()
-	print TRL.EBITDA()
-	print TRL.enterpriseEBITDA()
+	print (TRL.balance())
+	print (TRL.income())
+	print (TRL.cash())
+	print (TRL.cash('quarterly'))
+	print (TRL.EPS())
+	print (TRL.bookValue())
+	print (TRL.marketCap())
+	print (TRL.enterpriseValue())
+	print (TRL.priceBookValue())
+	print (TRL.EVperRevenue())
+	print (TRL.priceSalesRatio())
+	print (TRL.priceBookRatio())
+	print (TRL.RevenuePerShare())
+	print (TRL.priceSalesRatio())
+	print (TRL.currentRatio())
+	print (TRL.EBITDA())
+	print (TRL.enterpriseEBITDA())
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
