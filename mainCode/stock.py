@@ -462,7 +462,7 @@ class Fundamental_Analysis(object):
 	def __statements(self, timeline, type_stmts):
 		if "annual" in timeline or "quarterly" in timeline:
 			raw = self.fundamentals.get_financial_stmts(timeline, type_stmts)
-			stmts = self.__raw2pd(raw[raw.keys()[0]])
+			stmts = self.__raw2pd(raw[list(raw.keys())[0]])
 			return stmts
 
 		else:
@@ -472,7 +472,7 @@ class Fundamental_Analysis(object):
 		# Get all the list dont repeat
 		key_list = []
 		for sheet in raw_data[self.ticker]:
-			key = sheet.values()[0].keys()
+			key = list(list(sheet.values())[0].keys())
 
 			tmp_list = list(set(key) - set(key_list))
 			key_list.extend(tmp_list)
@@ -482,7 +482,7 @@ class Fundamental_Analysis(object):
 		date_index = []
 		data_pd = []
 		for sheet in raw_data[self.ticker]:
-			date_temp = sheet.keys()[0]
+			date_temp = list(sheet.keys())[0]
 			
 			date_index.append(date_temp)
 			temp_data = []
@@ -556,7 +556,7 @@ class Technical_Analysis(object):
 		except:
 			pass
 		print(self.trade_history)
-		keys = self.trade_history[0].keys()
+		keys = list(self.trade_history[0].keys())
 
 		t0  = datetime.datetime(1970,1,1)
 		timezone = datetime.timedelta(hours=6)
@@ -578,9 +578,9 @@ class Technical_Analysis(object):
 	def reshape_data(self):
 
 		try:
-			keys = self.trade_history[0].keys()
+			keys = list(self.trade_history[0].keys())
 		except:
-			keys = self.trade_history.keys()
+			keys = list(self.trade_history.keys())
 			if len(keys) > 0:
 				return self.trade_history
 			else:
@@ -603,7 +603,7 @@ class Technical_Analysis(object):
 		return temp_data
 
 	def time_interval(self, interval=datetime.timedelta(seconds=1) ):
-		keys = self.trade_history.keys()
+		keys = list(self.trade_history.keys())
 		trade_interval = {k:[] for k in keys}
 		
 		if interval.seconds:
