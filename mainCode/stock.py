@@ -154,7 +154,7 @@ class Fundamental_Analysis(object):
 		# Calculate
 		#print self.income_stmts["totalRevenue"]
 		ev_revenue =[]
-		for total_revenue, EV in itertools.izip(self.income_stmts["totalRevenue"], self.valuations["EV"]):
+		for total_revenue, EV in zip(self.income_stmts["totalRevenue"], self.valuations["EV"]):
 			ev_revenue.append(EV/total_revenue)
 
 		self.valuations["ev_revenue"] = ev_revenue
@@ -194,7 +194,7 @@ class Fundamental_Analysis(object):
 		self.__missingStatementInformation(self.balance_stmts,"cash")
 
 		EV = []
-		for shortDebt, longDebt, cash_equivalents in itertools.izip(self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
+		for shortDebt, longDebt, cash_equivalents in zip(self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
 			total_debt = shortDebt + longDebt
 			EV.append(self.market_cap + total_debt - cash_equivalents)
 
@@ -232,7 +232,7 @@ class Fundamental_Analysis(object):
 
 		book_value = []
 		book_value_per_share = []
-		for total_assets, intangible_assets, total_liability in itertools.izip(self.balance_stmts["totalAssets"],self.balance_stmts["intangibleAssets"],self.balance_stmts["totalLiab"]):
+		for total_assets, intangible_assets, total_liability in zip(self.balance_stmts["totalAssets"],self.balance_stmts["intangibleAssets"],self.balance_stmts["totalLiab"]):
 			tangable_assets = total_assets - intangible_assets
 			book_value.append(tangable_assets - total_liability)
 			book_value_per_share.append((tangable_assets - total_liability)/self.outstanding_shares)
@@ -272,7 +272,7 @@ class Fundamental_Analysis(object):
 
 		PS = []
 
-		for rps, close in itertools.izip(self.financial["revenue-per-share"], self.balance_stmts["Close"]):
+		for rps, close in zip(self.financial["revenue-per-share"], self.balance_stmts["Close"]):
 			PS.append(close/rps)
 
 		self.valuations["price-per-sale"] = PS
@@ -297,7 +297,7 @@ class Fundamental_Analysis(object):
 
 		PB = []
 
-		for close, bps in itertools.izip(self.balance_stmts["Close"], self.valuations["book value per share"]):
+		for close, bps in zip(self.balance_stmts["Close"], self.valuations["book value per share"]):
 			PB.append(close/bps)
 
 		self.valuations["Price-Book"] = PB
@@ -332,7 +332,7 @@ class Fundamental_Analysis(object):
 		self.__checkpdIndex(self.financial, self.balance_stmts.index)
 
 		current_ratio = []
-		for assets, liabilities in itertools.izip(self.balance_stmts["totalCurrentAssets"],self.balance_stmts["totalCurrentLiabilities"]):
+		for assets, liabilities in zip(self.balance_stmts["totalCurrentAssets"],self.balance_stmts["totalCurrentLiabilities"]):
 			current_ratio.append(float(assets)/float(liabilities))
 
 		self.financial["current-ratio"] = current_ratio
@@ -375,7 +375,7 @@ class Fundamental_Analysis(object):
 
 		EPS = []
 		
-		for net_income, dividends in itertools.izip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
+		for net_income, dividends in zip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
 			total_earnings = net_income+dividends
 			EPS.append(total_earnings/self.outstanding_shares)
 
