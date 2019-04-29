@@ -134,7 +134,7 @@ class Fundamental_Analysis(object):
 	'''
 	################# Information Derived from statements ####################
 	'''
-	
+
 	'''
 	### Valuations ####
 	self.__createValuationMetrics()
@@ -153,7 +153,6 @@ class Fundamental_Analysis(object):
 			self.enterpriseValue()
 
 		# Calculate
-		#print self.income_stmts["totalRevenue"]
 		ev_revenue =[]
 		for total_revenue, EV in zip(self.income_stmts["totalRevenue"], self.valuations["EV"]):
 			ev_revenue.append(EV/total_revenue)
@@ -288,6 +287,7 @@ class Fundamental_Analysis(object):
 		price to book ratio: define as price per share over book value per share
 		'''
 		self.__createValuationMetrics()
+		self.__createIncomeMetrics()
 		self.__checkpdIndex(self.valuations, self.income_stmts.index)
 
 		if not self.__missingStatementInformation(self.valuations, "book value per share"):
@@ -298,7 +298,7 @@ class Fundamental_Analysis(object):
 
 		PB = []
 
-		for close, bps in zip(self.balance_stmts["Close"], self.valuations["book value per share"]):
+		for close, bps in zip(self.income_stmts["Close"], self.valuations["book value per share"]):
 			PB.append(close/bps)
 
 		self.valuations["Price-Book"] = PB
@@ -524,9 +524,6 @@ class Fundamental_Analysis(object):
 		''' 
 		# Download the data
 		day_data = self._statementsTrade(Q_sheet.index)
-		#print "Day data", day_data
-		#print "", day_data.columns
-		#print day_data[day_data.columns[0]].tolist()
 
 		# Store it in the balance dataframe
 		for cl in day_data.columns:
@@ -614,7 +611,7 @@ class Technical_Analysis(object):
 
 			j = interval.seconds
 			L = len(self.trade_history["date"])
-			for i in xrange(0, L, j):
+			for i in range(0, L, j):
 				if (i+j) > L:
 					j = L-i-1
 				trade_interval["date"].append(self.trade_history["date"][i])
@@ -631,7 +628,7 @@ class Technical_Analysis(object):
 
 			L = len(self.trade_history["date"])
 			print ("Length ",L)
-			for i in xrange(0, L, j):
+			for i in range(0, L, j):
 				if (i+j) > L:
 					j = L-i-1
 
@@ -651,7 +648,7 @@ class Technical_Analysis(object):
 		new_high = 0
 		breach_number = []
 
-		for i in xrange(0,len(self.trade_history)-1):
+		for i in range(0,len(self.trade_history)-1):
 			
 			# New high?
 			if self.trade_history[i]["close"] > new_high:
@@ -677,7 +674,7 @@ class Technical_Analysis(object):
 			raise Exception("price choose its not correct") 
 
 		RSI_value = []
-		for i in xrange(len(self.trade_history[price_use]),time_period,-1):
+		for i in range(len(self.trade_history[price_use]),time_period,-1):
 			[up_gain, down_gain] = self.price_difference(self.trade_history[price_use][(i-time_period):i])
 			if not up_gain:
 				RSI_value.append(0)
@@ -699,7 +696,7 @@ class Technical_Analysis(object):
 	def price_difference(self, price):
 		diff = []
 
-		for i in xrange(0,len(price)-1):
+		for i in range(0,len(price)-1):
 			diff.append(price[i+1] - price[i])
 
 		up_gain = []
@@ -714,7 +711,7 @@ class Technical_Analysis(object):
 
 	def SMA(self, price="close", period=20, plot_data = True):
 		sma = []
-		for i in xrange(period,len(self.trade_history[price])):
+		for i in range(period,len(self.trade_history[price])):
 			# take the average of i-period to i
 			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i])/period
 
@@ -729,7 +726,7 @@ class Technical_Analysis(object):
 		sma = self.SMA(price=price, period=period, plot_data=False)
 		wma = (2/(period+1))
 		ema = []
-		for i in xrange(period, len(self.trade_history[price])):
+		for i in range(period, len(self.trade_history[price])):
 			ema.append( self.trade_history[price][i]-ema[i-1]*wma + ema[i-1] )
 
 		if plot_data:
@@ -841,7 +838,7 @@ class Technical_Analysis(object):
 		lines = []
 		patches = []
 		l = len(date)
-		for i in xrange(0,l):
+		for i in range(0,l):
 			#if ochl:
 			#	t, open, close, high, low = q[:5]
 			#else:
@@ -929,7 +926,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 				except KeyError:
 					# Find how to tell if there is no data
 					if hist.head(1).index[0] > prev_d:
-						#print "Tail", hist.head(1)
+						#print ("Tail", hist.head(1))
 						head_top = hist.loc[hist.head(1).index[0]]
 						head_top.iloc[:] = NaN
 						head_top.name = prev_d
@@ -938,7 +935,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 
 					#raise
 		#t_end = time.time()
-		#print "Method 1", t_end-t_start
+		#print ("Method 1", t_end-t_start)
 		##############################################################################
 
 		######################### Method 2: Load one by one ##########################
@@ -958,7 +955,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 				
 				Qtrade = Qtrade.append(web.DataReader(self.ticker, 'yahoo', prev_d, prev_d))
 		t_end = time.time()
-		print "Method 2 ", t_end-t_start
+		print ("Method 2 ", t_end-t_start)
 		'''
 		################################################################################
 		
@@ -1004,17 +1001,17 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 	
 		
 		self.trade_history = {"date":date,"open":opend,"close":closed,"high":highd, "low":lowd, "volume":volume}
-		#print self.trade_history
+		#print (self.trade_history)
 
 	def historic_data_yahoo(self):
 		url = "http://finance.yahoo.com/quote/%s/history?p=%s"%(self.ticker,self.ticker)
 		response = requests.get(url)
 		html = response.content
 		self.trade_history = self.html2data(html)
-		#print self.trade_history
+		#print (self.trade_history)
 		#self.trade_history = self.reshape_data(temp_data)
 		#self.data_lenght = len(self.historic["date"])
-		#print self.data_lenght
+		#print (self.data_lenght)
 
 	def html2data(self, html):
 		Ibegin = html.find("HistoricalPriceStore") + len("HistoricalPriceStore") + 12
@@ -1044,7 +1041,7 @@ class cryptocurrency(Technical_Analysis):
 		self.trade_history = response.json()['Data']
 
 		
-		for i in xrange(1,int(self.amount)/2000):
+		for i in range(1,int(self.amount)/2000):
 			url = "https://min-api.cryptocompare.com/data/histominute" +\
 			"?fsym=%s"%(self.ticker) +\
 			"&tsym=%s"%(self.currency) +\
@@ -1092,7 +1089,7 @@ def historicTest():
 	#ticker = 'ITA'
 	ticker = 'AAPL'
 	apple_data = historic_stock(ticker)
-	#print apple_data 
+	#print (apple_data )
 
 def classTest():
 	#ticker = 'ITA'
@@ -1108,16 +1105,17 @@ def supTest():
 def parent_classes():
 	# stock
 	AOK = stock('BRK-B')
-	#print ITA.trade_history.index[0]
-	#print TTMI.trade_history
+	#print (ITA.trade_history.index[0])
+	#print (TTMI.trade_history)
 	AOK.plot_line()
+	AOK.plot()
 	#TTMI.RSI()
 	#crypto
 	#ETH = cryptocurrency('ETH', amount='7000')
-	#print ETH.trade_history["date"]
+	#print (ETH.trade_history["date"])
 
-	#print "ETH: ", ETH.trade_history["date"]
-	#print ETH.time_interval(datetime.timedelta(days=1))
+	#print ("ETH: ", ETH.trade_history["date"])
+	#print (ETH.time_interval(datetime.timedelta(days=1)))
 	#ETH.plot()
 
 def other_test():
@@ -1159,6 +1157,6 @@ def time_lookup_day_values():
 if __name__=="__main__":
 	#parent_classes()
 	#other_test()
-	fundamental_test()
-	#time_lookup_day_values()
+	#fundamental_test()
+	time_lookup_day_values()
 
