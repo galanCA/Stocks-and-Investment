@@ -402,6 +402,9 @@ class Fundamental_Analysis(object):
 		print(self.income_stmts["interestExpense"])
 		print(self.cash_stmts["depreciation"])
 
+		for net_income, interest_expenses, depreciation in zip(self.income_stmts["netIncome"],self.income_stmts["interestExpense"], self.cash_stmts["depreciation"]):
+			print(net_income+ interest_expenses+depreciation)
+
 	def TTM(self):
 		'''
 		'''
@@ -1125,21 +1128,21 @@ def other_test():
 def fundamental_test():
 	ticker =  "KO"
 	TRL = stock(ticker)	
-	print (TRL.balance())
-	print (TRL.income())
-	print (TRL.cash())
-	print (TRL.cash('quarterly'))
-	print (TRL.EPS())
-	print (TRL.bookValue())
-	print (TRL.marketCap())
-	print (TRL.enterpriseValue())
-	print (TRL.priceBookValue())
-	print (TRL.EVperRevenue())
-	print (TRL.priceSalesRatio())
-	print (TRL.priceBookRatio())
-	print (TRL.RevenuePerShare())
-	print (TRL.priceSalesRatio())
-	print (TRL.currentRatio())
+	#print (TRL.balance())
+	#print (TRL.income())
+	#print (TRL.cash())
+	#print (TRL.cash('quarterly'))
+	#print (TRL.EPS())
+	#print (TRL.bookValue())
+	#print (TRL.marketCap())
+	#print (TRL.enterpriseValue())
+	#print (TRL.priceBookValue())
+	#print (TRL.EVperRevenue())
+	#print (TRL.priceSalesRatio())
+	#print (TRL.priceBookRatio())
+	#print (TRL.RevenuePerShare())
+	#print (TRL.priceSalesRatio())
+	#print (TRL.currentRatio())
 	print (TRL.EBITDA())
 	print (TRL.enterpriseEBITDA())
 
@@ -1152,11 +1155,11 @@ def time_lookup_day_values():
 	ticker = ["KO","TSLA","SPOT", "SNAP"]
 	for T in ticker:
 		TRL = stock(T)	
-		TRL.priceBookRatio()
+		print (TRL.priceBookRatio())
 
 if __name__=="__main__":
 	#parent_classes()
 	#other_test()
-	#fundamental_test()
-	time_lookup_day_values()
+	fundamental_test()
+	#time_lookup_day_values()
 
