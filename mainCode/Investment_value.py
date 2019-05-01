@@ -1,6 +1,6 @@
 # Add new path
 import sys
-sys.path.append('C:\\Users\\Cesar Workdesk\\Documents\\Projects\\Py2GoogleDrive\\mainCode\\')
+sys.path.append('..\\..\\Py2GoogleDrive\\mainCode\\')
 
 # Build/Import libraries
 from google_sheet_class import Gsheet
@@ -255,7 +255,7 @@ def main():
 	plt.title("Total")
 	
 
-	#plt.legend(labels=["Investment","Principal"])
+	plt.legend(labels=["Investment","Principal"])
 	plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 	plt.grid()
 
