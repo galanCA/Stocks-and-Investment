@@ -160,7 +160,7 @@ class Fundamental_Analysis(object):
 		self.valuations["price-earnings"] = PE
 		return self.valuations["price-earnings"]
 
-	def grahamNumber(self, timeline='annual'):
+	def grahamNumber(self, timeline='annual', PE_max=15.0, PB_max=1.5):
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createFinancialMetrics()
@@ -174,7 +174,7 @@ class Fundamental_Analysis(object):
 
 		graham_number = []
 		for EPS, PB in zip(self.valuations["Price-Book"], self.financial["EPS"]):
-			graham_number.append(sqrt(15*1.5*EPS*PB))
+			graham_number.append(sqrt(PE_max*PB_max*EPS*PB))
 
 		self.valuations["Graham-number"] = graham_number
 
@@ -192,7 +192,7 @@ class Fundamental_Analysis(object):
 
 		PG = []
 		for GN, price in zip(self.valuations["Graham-number"], self.income_stmts["Close"]):
-			PG.append(price/GN)
+			PG.append((price)/GN*100)
 
 		self.valuations["price-Graham"] = PG
 
@@ -287,6 +287,8 @@ class Fundamental_Analysis(object):
 		self.__createValuationMetrics()
 		self.__createOutstandShMetrics()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+
+		self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
 
 		book_value = []
 		book_value_per_share = []
