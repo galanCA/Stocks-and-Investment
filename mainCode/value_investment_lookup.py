@@ -12,9 +12,10 @@ def main():
 		TMK.EPS('quarterly')
 		TMK.currentRatio('quarterly')
 		TMK.grahamNumber('quarterly')
-		print(TMK.valuations[["Price-Book","Graham-number"]])
+		TMK.priceEarning('quarterly')
+		print(TMK.valuations[["Price-Book","Graham-number","price-earnings"]])
 		print(TMK.financial[["EPS","current-ratio"]])
-		print(TMK.trade_history[["Close","Open","High","Low"]][0])
+		print(TMK.trade_history["Close"][0])
 
 
 if __name__ == '__main__':

@@ -81,7 +81,7 @@ from time import sleep
 from collections import OrderedDict
 from time import sleep
 from yahoofinancials import YahooFinancials
-from math import sqrt
+from math import sqrt, isnan
 
 # Libraries with different names
 import pandas as pd
@@ -142,6 +142,24 @@ class Fundamental_Analysis(object):
 	self.__createValuationMetrics()
 	self.valuations
 	'''
+	def priceEarning(self, timeline='annual'):
+		# Check if data has being loaded
+		self.__createValuationMetrics()
+		self.__createFinancialMetrics()
+
+		if not self.__missingStatementInformation(self.financial,"EPS"):
+			self.EPS(timeline)
+
+		if not self.__missingStatementInformation(self.income_stmts, "Close"):
+			self.__downloadBalanceStockInformation(self.income_stmts)
+
+		PE = []
+		for price, eps in zip(self.income_stmts["Close"], self.financial["EPS"]):
+			PE.append(price/eps)
+
+		self.valuations["price-earnings"] = PE
+		return self.valuations["price-earnings"]
+
 	def grahamNumber(self, timeline='annual'):
 		# Check if data has being loaded
 		self.__createValuationMetrics()
@@ -393,13 +411,18 @@ class Fundamental_Analysis(object):
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
 
 		# Check statement values exists
+		print(self.cash_stmts["dividendsPaid"])
 		self.__missingStatementInformation(self.cash_stmts,"dividendsPaid")
 		self.__missingStatementInformation(self.income_stmts,"netIncome")
 
 		EPS = []
 		
 		for net_income, dividends in zip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
-			total_earnings = net_income+dividends
+			if isnan(dividends):
+				total_earnings = net_income
+			else:
+				total_earnings = net_income+dividends
+
 			EPS.append(total_earnings/self.outstanding_shares)
 
 		self.financial["EPS"] = EPS
