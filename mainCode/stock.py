@@ -75,11 +75,13 @@ import time
 import itertools
 import numpy
 
+
 from lxml import html 
 from time import sleep
 from collections import OrderedDict
 from time import sleep
 from yahoofinancials import YahooFinancials
+from math import sqrt
 
 # Libraries with different names
 import pandas as pd
@@ -140,6 +142,26 @@ class Fundamental_Analysis(object):
 	self.__createValuationMetrics()
 	self.valuations
 	'''
+	def grahamNumber(self, timeline='annual'):
+		# Check if data has being loaded
+		self.__createValuationMetrics()
+		self.__createFinancialMetrics()
+
+		# check if statemnts values exists
+		if not self.__missingStatementInformation(self.valuations,"Price-Book"):
+			self.priceBookRatio(timeline)
+
+		if not self.__missingStatementInformation(self.financial,"EPS"):
+			self.EPS(timeline)
+
+		graham_number = []
+		for EPS, PB in zip(self.valuations["Price-Book"], self.financial["EPS"]):
+			graham_number.append(sqrt(15*1.5*EPS*PB))
+
+		self.valuations["Graham-number"] = graham_number
+
+		return self.valuations["Graham-number"] 
+
 	def EVperRevenue(self, timeline='annual'):
 		'''
 		Enterprise Value per revenue: 
@@ -517,7 +539,7 @@ class Fundamental_Analysis(object):
 			statement[colmn]
 			return True
 		except KeyError:
-			statement[colmn] = NaN
+			statement[colmn] = 0
 			return False
 
 	def __downloadBalanceStockInformation(self, Q_sheet):
@@ -1145,6 +1167,7 @@ def fundamental_test():
 	#print (TRL.currentRatio())
 	print (TRL.EBITDA())
 	print (TRL.enterpriseEBITDA())
+	print(grahamNumber())
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
