@@ -180,6 +180,24 @@ class Fundamental_Analysis(object):
 
 		return self.valuations["Graham-number"] 
 
+	def priceGraham(self, timeline='annual'):
+		# Check if data has being loaded
+		self.__createValuationMetrics()
+
+		if not self.__missingStatementInformation(self.valuations,"Graham-number"):
+			self.grahamNumber(timeline)
+
+		if not self.__missingStatementInformation(self.income_stmts, "Close"):
+			self.__downloadBalanceStockInformation(self.income_stmts)
+
+		PG = []
+		for GN, price in zip(self.valuations["Graham-number"], self.income_stmts["Close"]):
+			PG.append(price/GN)
+
+		self.valuations["price-Graham"] = PG
+
+		return self.valuations["price-Graham"]
+
 	def EVperRevenue(self, timeline='annual'):
 		'''
 		Enterprise Value per revenue: 
@@ -411,7 +429,6 @@ class Fundamental_Analysis(object):
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
 
 		# Check statement values exists
-		print(self.cash_stmts["dividendsPaid"])
 		self.__missingStatementInformation(self.cash_stmts,"dividendsPaid")
 		self.__missingStatementInformation(self.income_stmts,"netIncome")
 
