@@ -140,17 +140,17 @@ class Fundamental_Analysis(object):
 	self.__createValuationMetrics()
 	self.valuations
 	'''
-	def EVperRevenue(self):
+	def EVperRevenue(self, timeline='annual'):
 		'''
 		Enterprise Value per revenue: 
 		'''
 		# Check if data has being loaded
 		self.__createValuationMetrics()
-		self.__createIncomeMetrics()
+		self.__createIncomeMetrics(timeline)
 		
 		# check if statemnts values exists
 		if not self.__missingStatementInformation(self.valuations,"EV"):
-			self.enterpriseValue()
+			self.enterpriseValue(timeline)
 
 		# Calculate
 		ev_revenue =[]
@@ -161,13 +161,13 @@ class Fundamental_Analysis(object):
 
 		return self.valuations["ev_revenue"]
 
-	def priceBookValue(self):
+	def priceBookValue(self, timeline='annual'):
 		self.__createValuationMetrics()
 		self.__createMarketCap()
 
 		# Check statement values exists
 		if not self.__missingStatementInformation(self.valuations,"book value"):
-			self.bookValue()
+			self.bookValue(timeline)
 
 		PB = []
 		for book in self.valuations["book value"]:
@@ -176,7 +176,7 @@ class Fundamental_Analysis(object):
 		self.valuations["PB"] = PB
 		return self.valuations["PB"]
 
-	def enterpriseValue(self):
+	def enterpriseValue(self, timeline='annual'):
 		'''
 		Enterprise Value: How much would it cost to buy the company outright
 
@@ -185,7 +185,7 @@ class Fundamental_Analysis(object):
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createMarketCap()
-		self.__createBalanceMetrics()
+		self.__createBalanceMetrics(timeline)
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
 
 		# check if statemnts values exists
@@ -201,21 +201,21 @@ class Fundamental_Analysis(object):
 		self.valuations["EV"] = EV
 		return self.valuations["EV"]
 
-	def trailingPE(self):
+	def trailingPE(self, timeline='annual'):
 		'''
 		trailing Price Earning ratio
 		'''
 		raise Exception("To be developt")
 		pass
 
-	def fowardPE(self):
+	def fowardPE(self, timeline='annual'):
 		'''
 		foward PE ratio
 		'''
 
 		raise Exception("To be developt")
 
-	def bookValue(self):
+	def bookValue(self, timeline='annual'):
 		'''
 		book value: tangable assets minus liabilities
 		Tangable assets define as total assets minus intangable assets
@@ -225,7 +225,7 @@ class Fundamental_Analysis(object):
 		https://www.investopedia.com/terms/b/bookvalue.asp
 		'''
 		# Check if the data has being loaded
-		self.__createBalanceMetrics()
+		self.__createBalanceMetrics(timeline)
 		self.__createValuationMetrics()
 		self.__createOutstandShMetrics()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
@@ -242,12 +242,12 @@ class Fundamental_Analysis(object):
 
 		return [self.valuations["book value"], self.valuations["book value per share"]]
 
-	def PEG(self):
+	def PEG(self, timeline='annual'):
 		'''
 		'''
 		raise Exception("To be developt")
 
-	def priceSalesRatio(self):
+	def priceSalesRatio(self,timeline='annual'):
 		'''
 		price to sales ratio
 
@@ -262,10 +262,10 @@ class Fundamental_Analysis(object):
 		'''
 		self.__createFinancialMetrics()
 		self.__createValuationMetrics()
-		self.__createBalanceMetrics()
+		self.__createBalanceMetrics(timeline)
 
 		if not self.__missingStatementInformation(self.financial, "revenue-per-share"):
-			self.RevenuePerShare()
+			self.RevenuePerShare(timeline)
 
 		if not self.__missingStatementInformation(self.balance_stmts, "Close"):
 			self.__downloadBalanceStockInformation(self.balance_stmts)
@@ -282,16 +282,16 @@ class Fundamental_Analysis(object):
 
 		#raise Exception("To be developt")
 
-	def priceBookRatio(self):
+	def priceBookRatio(self,timeline='annual'):
 		'''
 		price to book ratio: define as price per share over book value per share
 		'''
 		self.__createValuationMetrics()
-		self.__createIncomeMetrics()
+		self.__createIncomeMetrics(timeline)
 		self.__checkpdIndex(self.valuations, self.income_stmts.index)
 
 		if not self.__missingStatementInformation(self.valuations, "book value per share"):
-			self.bookValue()
+			self.bookValue(timeline)
 
 		if not self.__missingStatementInformation(self.income_stmts, "Close"):
 			self.__downloadBalanceStockInformation(self.income_stmts)
@@ -305,7 +305,7 @@ class Fundamental_Analysis(object):
 
 		return self.valuations["Price-Book"]
 
-	def enterpriseEBITDA(self):
+	def enterpriseEBITDA(self,timeline='annual'):
 		'''
 		'''
 		#raise Exception("To be developt")
@@ -315,7 +315,7 @@ class Fundamental_Analysis(object):
 		self.__missingStatementInformation(self.valuations, "EV")
 		self.__missingStatementInformation(self.financial, "EBITDA")
 
-	def ROTS(self):
+	def ROTS(self,timeline='annual'):
 		'''
 		'''
 		raise Exception("To be developt")
@@ -325,11 +325,11 @@ class Fundamental_Analysis(object):
 	self.__createFinancialMetrics()
 	self.financial
 	'''
-	def currentRatio(self):
+	def currentRatio(self,timeline='annual'):
 		'''
 		'''
 		self.__createFinancialMetrics()
-		self.__createBalanceMetrics()
+		self.__createBalanceMetrics(timeline)
 		self.__checkpdIndex(self.financial, self.balance_stmts.index)
 
 		current_ratio = []
@@ -340,13 +340,13 @@ class Fundamental_Analysis(object):
 
 		return self.financial["current-ratio"]
 
-	def RevenuePerShare(self):
+	def RevenuePerShare(self,timeline):
 		'''
 		Revenue per share or sales per shares: 
 
 		'''
 		self.__createFinancialMetrics()
-		self.__createIncomeMetrics()
+		self.__createIncomeMetrics(timeline)
 		self.__createOutstandShMetrics()
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
 
@@ -357,16 +357,16 @@ class Fundamental_Analysis(object):
 		self.financial["revenue-per-share"] = revenue_per_share
 		return self.financial["revenue-per-share"]
 
-	def EPS(self):
+	def EPS(self, timeline):
 		'''
 		EPS: Earnings per shares 
 
 		link: https://www.fool.com/knowledge-center/how-to-calculate-earnings-per-share-on-a-balance-s.aspx
 		'''
 		# Check if the data has being loaded
-		self.__createIncomeMetrics()
+		self.__createIncomeMetrics(timeline)
 		self.__createOutstandShMetrics()
-		self.__createCashMetrics()
+		self.__createCashMetrics(timeline)
 		self.__createFinancialMetrics()
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
 
@@ -384,16 +384,16 @@ class Fundamental_Analysis(object):
 
 		return self.financial["EPS"]
 
-	def EBITDA(self):
+	def EBITDA(self,timeline='annual'):
 		'''
 		No clue what this is
 		'''
 		#raise Exception("To be Developt")
 
 		self.__createFinancialMetrics()
-		self.__createIncomeMetrics()
-		self.__createBalanceMetrics()
-		self.__createCashMetrics()
+		self.__createIncomeMetrics(timeline)
+		self.__createBalanceMetrics(timeline)
+		self.__createCashMetrics(timeline)
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
 		self.__missingStatementInformation(self.balance_stmts,"amortication")
 
@@ -433,23 +433,23 @@ class Fundamental_Analysis(object):
 		except AttributeError:
 			self.marketCap()
 
-	def __createIncomeMetrics(self):
+	def __createIncomeMetrics(self, timeline):
 		try:
 			self.income_stmts
 		except AttributeError:
-			self.income()
+			self.income(timeline)
 
-	def __createCashMetrics(self):
+	def __createCashMetrics(self, timeline):
 		try:
 			self.cash_stmts
 		except AttributeError:
-			self.cash()
+			self.cash(timeline)
 
-	def __createBalanceMetrics(self):
+	def __createBalanceMetrics(self, timeline):
 		try:
 			self.balance_stmts
 		except AttributeError:
-			self.balance()
+			self.balance(timeline)
 
 	def __createValuationMetrics(self):
 		try:

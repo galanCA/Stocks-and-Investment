@@ -19,7 +19,7 @@ from decimal import Decimal
 MAINSPREADSHEET_ID = '1wUBzSk-RY2fQC2Rri06v-ZJ6oHjwmhIIgBYVxncaUms'
 
 # test
-#history_investment = Gsheet(MAINSPREADSHEET_ID)
+# history_investment = Gsheet(MAINSPREADSHEET_ID)
 
 def Investment_data(stock_hist, Book, day_value="Close"):
 	ticker  = stock_hist.ticker 
@@ -263,7 +263,6 @@ def main():
 	ax2.plot(month_date,percent_month,'g*-')
 
 	plt.show()
-
 
 if __name__ == '__main__':
 	main()
