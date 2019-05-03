@@ -1,9 +1,9 @@
 from stock import stock
-
+from decimal import *
 
 def main():
-	ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL']
-	#ticker_list = ["AAPL"]
+	#ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL']
+	ticker_list = ["SNAP"]
 	for ticker in ticker_list:
 		print(ticker)
 		TMK = stock(ticker)
@@ -16,9 +16,11 @@ def main():
 		TMK.priceGraham('quarterly')
 		print(TMK.valuations[["Price-Book","price-earnings","Graham-number", "price-Graham"]])
 		print(TMK.financial[["EPS","current-ratio"]])
-		print(TMK.income_stmts["Close"])
-		print(TMK.trade_history["Close"][0])
+		print("\n",TMK.income_stmts["Close"])
+		print(TMK.trade_history)
+		print("Close:", TMK.trade_history["Close"][-1])
 
+		'''
 		print ("Earnings per share: ", )
 		if TMK.financial["EPS"] > 0:
 			print("Ok")
@@ -36,6 +38,8 @@ def main():
 			print("Ok")
 		else:
 			print ("Fail")
+
+		'''
 
 
 if __name__ == '__main__':

@@ -50,6 +50,7 @@ Goal is to extract
 		Levered Free Cash Flow
 		EPS 						- Done
 		TTM 						- To work on
+		ROE
 
 	Trading informations
 		Beta
@@ -400,7 +401,7 @@ class Fundamental_Analysis(object):
 
 		return self.financial["current-ratio"]
 
-	def RevenuePerShare(self,timeline):
+	def RevenuePerShare(self,timeline='annual'):
 		'''
 		Revenue per share or sales per shares: 
 
@@ -417,7 +418,7 @@ class Fundamental_Analysis(object):
 		self.financial["revenue-per-share"] = revenue_per_share
 		return self.financial["revenue-per-share"]
 
-	def EPS(self, timeline):
+	def EPS(self, timeline='annual'):
 		'''
 		EPS: Earnings per shares 
 
@@ -961,9 +962,11 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		if not from_date:
 			today = datetime.datetime.today()
 			start_date = today-datetime.timedelta(period)
-			self.trade_history = web.DataReader(ticker, 'yahoo', start_date, today)
+			trade_history = web.DataReader(ticker, 'yahoo', start_date, today)
 		else:
-			self.trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
+			trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
+
+		self.trade_history = trade_history.round(2)
 
 	def _statementsTrade(self, Q_dates):
 		'''
@@ -1192,24 +1195,24 @@ def other_test():
 def fundamental_test():
 	ticker =  "KO"
 	TRL = stock(ticker)	
-	#print (TRL.balance())
-	#print (TRL.income())
-	#print (TRL.cash())
-	#print (TRL.cash('quarterly'))
-	#print (TRL.EPS())
-	#print (TRL.bookValue())
-	#print (TRL.marketCap())
-	#print (TRL.enterpriseValue())
-	#print (TRL.priceBookValue())
-	#print (TRL.EVperRevenue())
-	#print (TRL.priceSalesRatio())
-	#print (TRL.priceBookRatio())
-	#print (TRL.RevenuePerShare())
-	#print (TRL.priceSalesRatio())
-	#print (TRL.currentRatio())
-	print (TRL.EBITDA())
-	print (TRL.enterpriseEBITDA())
-	print(grahamNumber())
+	print (TRL.balance())
+	print (TRL.income())
+	print (TRL.cash())
+	print (TRL.cash('quarterly'))
+	print (TRL.EPS())
+	print (TRL.bookValue())
+	print (TRL.marketCap())
+	print (TRL.enterpriseValue())
+	print (TRL.priceBookValue())
+	print (TRL.EVperRevenue())
+	print (TRL.priceSalesRatio())
+	print (TRL.priceBookRatio())
+	print (TRL.RevenuePerShare())
+	print (TRL.priceSalesRatio())
+	print (TRL.currentRatio())
+	#print (TRL.EBITDA())
+	#print (TRL.enterpriseEBITDA())
+	print(TRL.grahamNumber())
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
