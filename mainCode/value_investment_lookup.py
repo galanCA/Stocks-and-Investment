@@ -2,8 +2,8 @@ from stock import stock
 from decimal import *
 
 def main():
-	#ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL']
-	ticker_list = ["SNAP"]
+	ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+	#sticker_list = ["AAPL"]
 	for ticker in ticker_list:
 		print(ticker)
 		TMK = stock(ticker)
@@ -17,7 +17,7 @@ def main():
 		print(TMK.valuations[["Price-Book","price-earnings","Graham-number", "price-Graham"]])
 		print(TMK.financial[["EPS","current-ratio"]])
 		print("\n",TMK.income_stmts["Close"])
-		print(TMK.trade_history)
+		#print(TMK.trade_history)
 		print("Close:", TMK.trade_history["Close"][-1])
 
 		'''

@@ -952,7 +952,6 @@ class Technical_Analysis(object):
 		plt.show()
 
 class stock(Technical_Analysis,Fundamental_Analysis):
-
 	def __init__(self, ticker, period=60, days=30, exchange='NASD', from_date=None, to_date=None):
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange, from_date=from_date, end_date=to_date)
 		Fundamental_Analysis.__init__(self, ticker)
@@ -979,7 +978,9 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		# Faster but not bulletproof
 
 		#t_start = time.time()
-		hist = web.DataReader(self.ticker, 'yahoo', Q_dates[-1], Q_dates[0])
+		start_date_load = datetime.datetime.strptime(Q_dates[-1],"%Y-%m-%d")- datetime.timedelta(15)
+		hist = web.DataReader(self.ticker, 'yahoo',start_date_load , Q_dates[0])
+		hist = hist.round(2)
 		for qD in Q_dates:
 			try:
 				Qtrade = Qtrade.append(hist.loc[qD])
@@ -990,17 +991,16 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 				# check to see that is not a weekend
 				while prev_d.weekday() == 6 or prev_d.weekday() == 5:
 					prev_d = prev_d - datetime.timedelta(1)
+
 				try:
 					Qtrade = Qtrade.append(hist.loc[prev_d.strftime("%Y-%m-%d")])
 
 				except KeyError:
 					# Find how to tell if there is no data
-					if hist.head(1).index[0] > prev_d:
-						#print ("Tail", hist.head(1))
-						head_top = hist.loc[hist.head(1).index[0]]
-						head_top.iloc[:] = NaN
-						head_top.name = prev_d
-						Qtrade = Qtrade.append(head_top, sort=False)
+					head_top = hist.loc[hist.head(1).index[0]]
+					head_top.iloc[:] = NaN
+					head_top.name = prev_d
+					Qtrade = Qtrade.append(head_top, sort=False)
 
 
 					#raise
