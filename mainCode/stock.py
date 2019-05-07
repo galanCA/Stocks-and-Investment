@@ -65,7 +65,7 @@ Goal is to extract
 		Short Ratio
 		Short% of Float
 		Shares Shorts (Prior Month)
-'''###
+'''
 
 # Libraries
 import requests
@@ -77,12 +77,13 @@ import itertools
 import numpy
 
 
-from lxml import html 
-from time import sleep
-from collections import OrderedDict
-from time import sleep
-from yahoofinancials import YahooFinancials
-from math import sqrt, isnan
+from ftplib 				import FTP
+from lxml 				import html 
+from time 				import sleep
+from collections 		import OrderedDict
+from time 				import sleep
+from yahoofinancials 	import YahooFinancials
+from math 				import sqrt, isnan
 
 # Libraries with different names
 import pandas as pd
@@ -290,6 +291,8 @@ class Fundamental_Analysis(object):
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
 
 		self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
+		self.__missingStatementInformation(self.balance_stmts,"totalAssets")
+		self.__missingStatementInformation(self.balance_stmts,"totalLiab")
 
 		book_value = []
 		book_value_per_share = []
@@ -1147,32 +1150,59 @@ class cryptocurrency(Technical_Analysis):
 
 			self.trade_history = temp
 
+def getTickerList():
+	ftp = FTP('ftp.nasdaqtrader.com')
+
+	# Test connection was successful
+	print(ftp.login())
+
+	ftp.cwd("SymbolDirectory")
+
+	#ftp.retrbinary("RETR nasdaqlisted.txt",open("nasdaqlisted.txt",wb).write)
+
+	lines = []
+	ftp.retrlines("RETR nasdaqlisted.txt", lines.append)
+
+	#print (lines)
+
+	ftp.quit()
+
+	ticker_list = []
+	index = []
+	for l in lines:
+		ticker_list.append(l.split("|"))
+
+	ticker = pd.DataFrame(data=ticker_list[1:-1],
+							columns=ticker_list[0])
+
+	return ticker
+
 ########### Test Cases ##############
-def testStockProperties():
+def __testStockProperties():
 	ticker = 'ITA'
 	print ("Fetching data for %s"%(ticker))
 	scraped_data = ETF_parse(ticker)
 	print ("Writing data to output file")
 	print ("Data: ", scraped_data )
 
-def historicTest():
+def __historicTest():
 	#ticker = 'ITA'
 	ticker = 'AAPL'
 	apple_data = historic_stock(ticker)
 	#print (apple_data )
 
-def classTest():
+def __classTest():
 	#ticker = 'ITA'
 	ticker = 'AAPL'
 	apple_stock = stock(ticker)
 	apple_stock.RSI()
 
-def supTest():
+def __supTest():
 	ticker = 'AAPL'
 	apple_stock = stock(ticker)
 	apple_stock.support_breach()
 
-def parent_classes():
+def __parent_classes():
 	# stock
 	AOK = stock('BRK-B')
 	#print (ITA.trade_history.index[0])
@@ -1188,11 +1218,11 @@ def parent_classes():
 	#print (ETH.time_interval(datetime.timedelta(days=1)))
 	#ETH.plot()
 
-def other_test():
+def __other_test():
 	result = web.DataReader('AAPL', 'yahoo', '2018-01-01', '2019-01-01')
 	print (result)
 
-def fundamental_test():
+def __fundamental_test():
 	ticker =  "KO"
 	TRL = stock(ticker)	
 	print (TRL.balance())
@@ -1219,15 +1249,19 @@ def fundamental_test():
 	#print TRL.trade_history
 	#print TRL.financial
 
-def time_lookup_day_values():
+def __time_lookup_day_values():
 	ticker = ["KO","TSLA","SPOT", "SNAP"]
 	for T in ticker:
 		TRL = stock(T)	
 		print (TRL.priceBookRatio())
 
+def __testTickerlist():
+	getTickerList()
+
 if __name__=="__main__":
-	#parent_classes()
-	#other_test()
-	fundamental_test()
-	#time_lookup_day_values()
+	#__parent_classes()
+	#__other_test()
+	#__fundamental_test()
+	#__time_lookup_day_values()
+	__testTickerlist()
 
