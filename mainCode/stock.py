@@ -107,6 +107,9 @@ class Fundamental_Analysis(object):
 
 	def balance(self, timeline='annual'):
 		self.balance_stmts = self.__statements(timeline, 'balance')
+		if self.balance_stmts.empty:
+			return None
+
 		return self.balance_stmts
 
 	def income(self, timeline='annual'):
@@ -358,7 +361,9 @@ class Fundamental_Analysis(object):
 			self.bookValue(timeline)
 
 		if not self.__missingStatementInformation(self.income_stmts, "Close"):
-			self.__downloadBalanceStockInformation(self.income_stmts)
+			if not self.__downloadBalanceStockInformation(self.income_stmts):
+				#raise Exception("not enought data available")
+				return None
 
 		PB = []
 
@@ -506,18 +511,24 @@ class Fundamental_Analysis(object):
 			self.income_stmts
 		except AttributeError:
 			self.income(timeline)
+			if self.income_stmts.empty:
+				raise Exception("DataUnavailable","Data does not exist")
 
 	def __createCashMetrics(self, timeline):
 		try:
 			self.cash_stmts
 		except AttributeError:
 			self.cash(timeline)
+			if self.cash_stmts.empty:
+				raise Exception("DataUnavailable","Data does not exist")
 
 	def __createBalanceMetrics(self, timeline):
 		try:
 			self.balance_stmts
 		except AttributeError:
 			self.balance(timeline)
+			if self.balance_stmts.empty:
+				raise Exception("DataUnavailable","Data does not exist")
 
 	def __createValuationMetrics(self):
 		try:
@@ -596,10 +607,14 @@ class Fundamental_Analysis(object):
 		# Download the data
 		day_data = self._statementsTrade(Q_sheet.index)
 
+		if not isinstance(day_data, pd.DataFrame):
+			return False
+
 		# Store it in the balance dataframe
 		for cl in day_data.columns:
 			Q_sheet[cl] = day_data[cl].tolist()
 
+		return True
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
@@ -976,7 +991,10 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		'''
 		# 
 		Qtrade = pd.DataFrame()
-		
+
+		if len(Q_dates) == 0:
+			return None
+
 		################ Method 1: Load everthing and then look #####################
 		# Faster but not bulletproof
 
@@ -1223,8 +1241,9 @@ def __other_test():
 	print (result)
 
 def __fundamental_test():
-	ticker =  "KO"
-	TRL = stock(ticker)	
+	ticker =  "AABA"
+	TRL = stock(ticker)
+	'''
 	print (TRL.balance())
 	print (TRL.income())
 	print (TRL.cash())
@@ -1236,13 +1255,17 @@ def __fundamental_test():
 	print (TRL.priceBookValue())
 	print (TRL.EVperRevenue())
 	print (TRL.priceSalesRatio())
-	print (TRL.priceBookRatio())
-	print (TRL.RevenuePerShare())
-	print (TRL.priceSalesRatio())
-	print (TRL.currentRatio())
+	'''
+	#print (TRL.priceBookRatio())
+	#print (TRL.RevenuePerShare())
+	#print (TRL.priceSalesRatio())
+	try:
+		print (TRL.currentRatio('quarterly'))
+	except Exception as insta:
+		print ("shit")
 	#print (TRL.EBITDA())
 	#print (TRL.enterpriseEBITDA())
-	print(TRL.grahamNumber())
+	#print(TRL.grahamNumber())
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
@@ -1256,12 +1279,13 @@ def __time_lookup_day_values():
 		print (TRL.priceBookRatio())
 
 def __testTickerlist():
+
 	getTickerList()
 
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
-	#__fundamental_test()
+	__fundamental_test()
 	#__time_lookup_day_values()
-	__testTickerlist()
+	#__testTickerlist()
 

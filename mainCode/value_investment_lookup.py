@@ -1,40 +1,53 @@
 from stock import stock, getTickerList
 from decimal import *
 
-def GrahamCheck(ticker):
+def defensive_investor_portafolio(ticker):
 	TMK = stock(ticker)
 
-	TMK.priceBookRatio('quarterly')
-	TMK.EPS('quarterly')
-	TMK.currentRatio('quarterly')
-	TMK.grahamNumber('quarterly')
-	TMK.priceEarning('quarterly')
-	TMK.priceGraham('quarterly')
+	#TMK.priceBookRatio('quarterly')
+	#TMK.EPS('quarterly')
+	
+	#TMK.grahamNumber('quarterly')
+	#TMK.priceEarning('quarterly')
+	#TMK.priceGraham('quarterly')
 	#print(TMK.valuations[["Price-Book","price-earnings","Graham-number", "price-Graham"]])
 	#print(TMK.financial[["EPS","current-ratio"]])
 	#print("\n",TMK.income_stmts["Close"])
 	#print(TMK.trade_history)
 	#print("Close:", TMK.trade_history["Close"][-1])
 
-	#print ("Earnings per share: ", )
+	#print (TMK.financial["current-ratio"])
+
+	try:
+		TMK.currentRatio('quarterly')
+	except Exception as insta:
+		return False
+
+	if TMK.financial["current-ratio"][0] > 2:
+		print("\tCurrent ratio: Ok")
+	else:
+		print("\tCurrent ratio: Fail")
+		return False
+
+	TMK.EPS('quarterly')
 	if TMK.financial["EPS"][0] > 0:
-		print("Earnings per share: Ok")
+		print("\tEarnings per share: Ok")
 	else:
-		print("Earnings per share: Fail")
+		print("\tEarnings per share: Fail")
 		return False
 
-	#print ("Graham percentage: ")
+	TMK.priceGraham('quarterly')
 	if TMK.valuations["price-Graham"][0] < 100:
-		print("Graham percentage: Ok")
+		print("\tGraham percentage: Ok")
 	else:
-		print("Graham percentage: Fail")
+		print("\tGraham percentage: Fail")
 		return False
 
-	#print("Graham Number: ")
+	TMK.grahamNumber('quarterly')
 	if TMK.valuations["Graham-number"][0] < TMK.trade_history["Close"][0]:
-		print("Graham Number: Ok")
+		print("\tGraham Number: Ok")
 	else:
-		print ("Graham Number: Fail")
+		print ("\tGraham Number: Fail")
 		return False
 
 	return True
@@ -49,8 +62,8 @@ def main():
 		#print (ticker["ETF"])
 		if "N" in ticker["ETF"]: 
 			print(ticker["Symbol"])
-			print(ticker["Symbol"],": ", GrahamCheck(ticker["Symbol"]))
-		
+			print(ticker["Symbol"],": ", defensive_investor_portafolio(ticker["Symbol"]))
+			print()
 
 if __name__ == '__main__':
 	main()
