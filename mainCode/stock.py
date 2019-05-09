@@ -1168,7 +1168,7 @@ class cryptocurrency(Technical_Analysis):
 
 			self.trade_history = temp
 
-def getTickerList():
+def getNASDAQTickerList():
 	ftp = FTP('ftp.nasdaqtrader.com')
 
 	# Test connection was successful
@@ -1194,6 +1194,11 @@ def getTickerList():
 							columns=ticker_list[0])
 
 	return ticker
+
+def getSandP500TickerList():
+	data = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+	table = data[0]
+	return table
 
 ########### Test Cases ##############
 def __testStockProperties():

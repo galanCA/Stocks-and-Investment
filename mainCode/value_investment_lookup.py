@@ -15,9 +15,21 @@ def defensive_investor_portafolio(ticker):
 	#print("\n",TMK.income_stmts["Close"])
 	#print(TMK.trade_history)
 	#print("Close:", TMK.trade_history["Close"][-1])
-
 	#print (TMK.financial["current-ratio"])
 
+	# Enterprise Size
+	TMK.income()
+	if TMK.income_stmts.empty:
+		return False
+	if TMK.income_stmts["totalRevenue"][0] > 500000:
+		print("\tSales/Enterprise Size: Ok")
+	else:
+		print("\tSales/Enterprise Size : Fail")
+		return False
+		
+
+	# Liabilities vs assets
+	TMK.income('quarterly')
 	try:
 		TMK.currentRatio('quarterly')
 	except Exception as insta:
@@ -29,12 +41,27 @@ def defensive_investor_portafolio(ticker):
 		print("\tCurrent ratio: Fail")
 		return False
 
+	# Earnings stability over 10 years
 	TMK.EPS('quarterly')
 	if TMK.financial["EPS"][0] > 0:
 		print("\tEarnings per share: Ok")
 	else:
 		print("\tEarnings per share: Fail")
 		return False
+
+	# Dividends more than 20 years
+
+	# Earnings growth and profitablity
+
+	# Price to earning ratio
+
+	# Price to assets
+
+
+
+
+
+
 
 	TMK.priceGraham('quarterly')
 	if TMK.valuations["price-Graham"][0] < 100:
@@ -53,9 +80,9 @@ def defensive_investor_portafolio(ticker):
 	return True
 
 def main():
-	ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
-	#sticker_list = ["AAPL"]
-	ticker_nasdaq = getTickerList()
+	#ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+	#ticker_list = ["ABEOW"]
+	ticker_nasdaq = getNASDAQTickerList()
 	#print (ticker_nasdaq)
 	
 	for index,ticker in ticker_nasdaq.iterrows():
