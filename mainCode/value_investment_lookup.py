@@ -1,23 +1,10 @@
-from stock import stock, getTickerList
+from stock import stock, getNASDAQTickerList, getSP500TickerList
 from decimal import *
 
 def defensive_investor_portafolio(ticker):
 	TMK = stock(ticker)
 
-	#TMK.priceBookRatio('quarterly')
-	#TMK.EPS('quarterly')
-	
-	#TMK.grahamNumber('quarterly')
-	#TMK.priceEarning('quarterly')
-	#TMK.priceGraham('quarterly')
-	#print(TMK.valuations[["Price-Book","price-earnings","Graham-number", "price-Graham"]])
-	#print(TMK.financial[["EPS","current-ratio"]])
-	#print("\n",TMK.income_stmts["Close"])
-	#print(TMK.trade_history)
-	#print("Close:", TMK.trade_history["Close"][-1])
-	#print (TMK.financial["current-ratio"])
-
-	# Enterprise Size
+	####################### Enterprise Size ######################
 	TMK.income()
 	if TMK.income_stmts.empty:
 		return False
@@ -26,9 +13,8 @@ def defensive_investor_portafolio(ticker):
 	else:
 		print("\tSales/Enterprise Size : Fail")
 		return False
-		
 
-	# Liabilities vs assets
+	####################### Liabilities vs assets #################
 	TMK.income('quarterly')
 	try:
 		TMK.currentRatio('quarterly')
@@ -41,7 +27,7 @@ def defensive_investor_portafolio(ticker):
 		print("\tCurrent ratio: Fail")
 		return False
 
-	# Earnings stability over 10 years
+	########################## Earnings stability over 10 years ##################
 	TMK.EPS('quarterly')
 	if TMK.financial["EPS"][0] > 0:
 		print("\tEarnings per share: Ok")
@@ -49,48 +35,53 @@ def defensive_investor_portafolio(ticker):
 		print("\tEarnings per share: Fail")
 		return False
 
-	# Dividends more than 20 years
+	###################### Dividends more than 20 years ###########################
 
-	# Earnings growth and profitablity
+	####################### Earnings growth and profitablity ######################
 
-	# Price to earning ratio
-
-	# Price to assets
-
-
-
-
-
-
-
-	TMK.priceGraham('quarterly')
-	if TMK.valuations["price-Graham"][0] < 100:
-		print("\tGraham percentage: Ok")
+	########################### Price to earning ratio ############################
+	TMK.priceEarning('quarterly')
+	#print (TMK.valuation["price-earnings"])
+	if TMK.valuation["price-earnings"][0] > 15:
+		print("\tPrice earnings: Ok")
 	else:
-		print("\tGraham percentage: Fail")
+		print("\tPrice earnings: Fail")
 		return False
 
-	TMK.grahamNumber('quarterly')
-	if TMK.valuations["Graham-number"][0] < TMK.trade_history["Close"][0]:
-		print("\tGraham Number: Ok")
-	else:
-		print ("\tGraham Number: Fail")
-		return False
+	################################ Price to assets #########################
 
 	return True
 
 def main():
 	#ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
-	#ticker_list = ["ABEOW"]
+	ticker_list = ["BRK-B"]
 	ticker_nasdaq = getNASDAQTickerList()
+	SP500_ticker = getSP500TickerList()
 	#print (ticker_nasdaq)
 	
+	'''
+	for ticker in ticker_list:
+		print(ticker)
+		print(ticker,": ", defensive_investor_portafolio(ticker))
+	'''
+
+	
+	for index, ticker in SP500_ticker.iterrows():
+		print(ticker["Symbol"])
+		try:
+			print(ticker["Symbol"],": ", defensive_investor_portafolio(ticker["Symbol"]))
+		except KeyError:
+			pass
+
+
+
+	'''
 	for index,ticker in ticker_nasdaq.iterrows():
 		#print (ticker["ETF"])
 		if "N" in ticker["ETF"]: 
 			print(ticker["Symbol"])
 			print(ticker["Symbol"],": ", defensive_investor_portafolio(ticker["Symbol"]))
 			print()
-
+	'''
 if __name__ == '__main__':
 	main()

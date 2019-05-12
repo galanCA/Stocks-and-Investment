@@ -77,7 +77,7 @@ import itertools
 import numpy
 
 
-from ftplib 				import FTP
+from ftplib 			import FTP
 from lxml 				import html 
 from time 				import sleep
 from collections 		import OrderedDict
@@ -482,6 +482,15 @@ class Fundamental_Analysis(object):
 		'''
 		'''
 		raise Exception("To be developt")
+
+	def dividendCheck(self, years=20):
+
+		to_date = datetime.datetime.today()
+		start_date = to_date-datetime.timedelta(365*years)
+		self.dividend(from_date=start_date, to_date=to_date)
+		
+		# check every year dividend
+		
 
 	'''
 	### Trading ####
@@ -977,10 +986,11 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 	def historic_data(self,ticker, period=60, days=1, from_date=None, to_date=None):
 		
 		if not from_date:
-			today = datetime.datetime.today()
-			start_date = today-datetime.timedelta(period)
-			trade_history = web.DataReader(ticker, 'yahoo', start_date, today)
+			to_date = datetime.datetime.today()
+			start_date = to_date-datetime.timedelta(period)
+			trade_history = web.DataReader(ticker, 'yahoo', start_date, to_date)
 		else:
+
 			trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
 
 		self.trade_history = trade_history.round(2)
@@ -1115,6 +1125,25 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 
 		return data
 
+	def dividends(self,period=60, from_date=None, to_date=None):
+		if not from_date:
+			to_date = datetime.datetime.today()
+			from_date = (to_date-datetime.timedelta(period))
+			from_date = from_date.strftime("%Y-%m-%d")
+			to_date  = to_date.strftime("%Y-%m-%d")
+			
+		raw = self.fundamentals.get_historical_price_data(from_date,to_date,'daily')
+		date_list = []
+		amount_list = []
+		for div in raw[self.ticker]['eventsData']['dividends']:
+			#print (div,raw[self.ticker]['eventsData']['dividends'][div]["amount"])
+			date_list.append(div)
+			amount_list.append(raw[self.ticker]['eventsData']['dividends'][div]["amount"])
+
+		div = pd.DataFrame(index=date_list,data=amount_list,columns=['Amount'])
+		self.div = div.sort_index()
+		return self.div
+
 class cryptocurrency(Technical_Analysis):
 	def __init__(self, ticker, currency='USD', amount='2000'):
 		Technical_Analysis.__init__(self, ticker, currency=currency, amount=amount)
@@ -1195,7 +1224,7 @@ def getNASDAQTickerList():
 
 	return ticker
 
-def getSandP500TickerList():
+def getSP500TickerList():
 	data = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
 	table = data[0]
 	return table
@@ -1287,10 +1316,16 @@ def __testTickerlist():
 
 	getTickerList()
 
+def __dividendsExtract():
+	ticker = 'KO'
+	TRL = stock(ticker)
+	print(TRL.dividends(from_date='2008-08-15', to_date='2018-09-15'))	
+	#
+
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
-	__fundamental_test()
+	#__fundamental_test()
 	#__time_lookup_day_values()
 	#__testTickerlist()
-
+	__dividendsExtract()
