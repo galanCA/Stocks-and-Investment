@@ -163,6 +163,7 @@ class Fundamental_Analysis(object):
 			PE.append(price/eps)
 
 		self.valuations["price-earnings"] = PE
+
 		return self.valuations["price-earnings"]
 
 	def grahamNumber(self, timeline='annual', PE_max=15.0, PB_max=1.5):
@@ -484,14 +485,39 @@ class Fundamental_Analysis(object):
 		raise Exception("To be developt")
 
 	def dividendCheck(self, years=20):
+		'''
+		Todo: 
+			Check the start company date
+		'''
 
+		# Get the timeline of dividends the user wants
 		to_date = datetime.datetime.today()
 		start_date = to_date-datetime.timedelta(365*years)
-		self.dividend(from_date=start_date, to_date=to_date)
+
+		# Initiate last_year variable
+		last_year = start_date
+
+		# Convert timeline to string 
+		start_date = start_date.strftime("%Y-%m-%d")
+		to_date  = to_date.strftime("%Y-%m-%d")
+		
+		# Access all the dividends
+		if self.dividend(from_date=start_date, to_date=to_date) is None:
+			return False
 		
 		# check every year dividend
-		
+		for i, row in self.div.iterrows():
+			div_date = datetime.datetime.strptime(i,"%Y-%m-%d")
 
+			if last_year.year + 1 == div_date.year:
+				last_year = div_date
+				continue
+			elif last_year.year == div_date.year:
+				continue
+			elif last_year.year + 1 > div_date.year:
+				return False
+
+		return True
 	'''
 	### Trading ####
 	'''
@@ -624,6 +650,7 @@ class Fundamental_Analysis(object):
 			Q_sheet[cl] = day_data[cl].tolist()
 
 		return True
+
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
@@ -1125,7 +1152,9 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 
 		return data
 
-	def dividends(self,period=60, from_date=None, to_date=None):
+	def dividend(self,period=60, from_date=None, to_date=None):
+
+
 		if not from_date:
 			to_date = datetime.datetime.today()
 			from_date = (to_date-datetime.timedelta(period))
@@ -1135,12 +1164,21 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		raw = self.fundamentals.get_historical_price_data(from_date,to_date,'daily')
 		date_list = []
 		amount_list = []
+		# Check it contains dividends
+		try:
+			raw[self.ticker]['eventsData']['dividends']
+		except KeyError:
+			self.div = None
+			return self.div
+
+
 		for div in raw[self.ticker]['eventsData']['dividends']:
 			#print (div,raw[self.ticker]['eventsData']['dividends'][div]["amount"])
 			date_list.append(div)
 			amount_list.append(raw[self.ticker]['eventsData']['dividends'][div]["amount"])
 
 		div = pd.DataFrame(index=date_list,data=amount_list,columns=['Amount'])
+		
 		self.div = div.sort_index()
 		return self.div
 
@@ -1275,7 +1313,7 @@ def __other_test():
 	print (result)
 
 def __fundamental_test():
-	ticker =  "AABA"
+	ticker =  "MMM"
 	TRL = stock(ticker)
 	'''
 	print (TRL.balance())
@@ -1300,6 +1338,8 @@ def __fundamental_test():
 	#print (TRL.EBITDA())
 	#print (TRL.enterpriseEBITDA())
 	#print(TRL.grahamNumber())
+	print(TRL.priceEarning('quarterly'))
+	print 
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
@@ -1317,15 +1357,15 @@ def __testTickerlist():
 	getTickerList()
 
 def __dividendsExtract():
-	ticker = 'KO'
+	ticker = 'TSLA'
 	TRL = stock(ticker)
-	print(TRL.dividends(from_date='2008-08-15', to_date='2018-09-15'))	
-	#
+	print(TRL.dividend(from_date='2008-08-15', to_date='2018-09-15'))
+	print(TRL.dividendCheck())	
 
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
-	#__fundamental_test()
+	__fundamental_test()
 	#__time_lookup_day_values()
 	#__testTickerlist()
-	__dividendsExtract()
+	#__dividendsExtract()

@@ -7,6 +7,11 @@ a initialization file that contains all your stocks should be use in the format
 ticker:amount_invested:average_price
 
 # Install 
+To install all the requiremnts needed to run all the scripts run 
+
+pip install -r requiremnts.txt
+
+To install only the requirements needed for the stock class run the function below
 pip install -r requirements_stock_class.txt
 
 This project will be done in 5 phases

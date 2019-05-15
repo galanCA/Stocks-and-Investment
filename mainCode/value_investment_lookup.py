@@ -37,11 +37,16 @@ def defensive_investor_portafolio(ticker):
 
 	###################### Dividends more than 20 years ###########################
 
+	if TMK.dividendCheck():
+		print("\tDividends: Ok")
+	else:
+		print("\tDividends: Fail")
+		return False
 	####################### Earnings growth and profitablity ######################
 
 	########################### Price to earning ratio ############################
 	TMK.priceEarning('quarterly')
-	#print (TMK.valuation["price-earnings"])
+	print (TMK.valuation["price-earnings"])
 	if TMK.valuation["price-earnings"][0] > 15:
 		print("\tPrice earnings: Ok")
 	else:
