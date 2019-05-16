@@ -151,6 +151,7 @@ class Fundamental_Analysis(object):
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createFinancialMetrics()
+		self.__checkpdIndex(self.valuations, self.financial.index)
 
 		if not self.__missingStatementInformation(self.financial,"EPS"):
 			self.EPS(timeline)
@@ -1331,15 +1332,15 @@ def __fundamental_test():
 	#print (TRL.priceBookRatio())
 	#print (TRL.RevenuePerShare())
 	#print (TRL.priceSalesRatio())
-	try:
-		print (TRL.currentRatio('quarterly'))
-	except Exception as insta:
-		print ("shit")
+	#try:
+	#	print (TRL.currentRatio('quarterly'))
+	#except Exception as insta:
+	#	print ("shit")
 	#print (TRL.EBITDA())
 	#print (TRL.enterpriseEBITDA())
 	#print(TRL.grahamNumber())
 	print(TRL.priceEarning('quarterly'))
-	print 
+	#print 
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
