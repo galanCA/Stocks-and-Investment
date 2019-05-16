@@ -40,10 +40,10 @@ def defensive_investor_portafolio(ticker):
 	TMK.EPS()
 	for eps in TMK.financial["EPS"]:
 		if eps < 0:
-			print("\t[Fail] Earnings per share")
+			print("\t[Fail] Earnings per share Stability")
 			return False
 		
-	print("\t[ Ok ] Earnings per share")
+	print("\t[ Ok ] Earnings per share Stability")
 
 
 	###################### Dividends more than 20 years ###########################
@@ -71,6 +71,7 @@ def defensive_investor_portafolio(ticker):
 	'''
 	Price to Earnings is su
 	'''
+	'''
 	TMK.priceEarning('quarterly')
 	#print (TMK.valuations["price-earnings"])
 	if TMK.valuations	["price-earnings"][0] > 10:
@@ -78,13 +79,14 @@ def defensive_investor_portafolio(ticker):
 	else:
 		print("\t[Fail] Price earnings")
 		return False
+	'''
 
 	################################ Price to assets #########################
 	'''
 	Make sure that assets to price is not too expensive
 	'''
 	TMK.priceBookRatio('quarterly')
-	if TMK.["Price-Book"][0] < 1.5:
+	if TMK.valuations["Price-Book"][0] < 1.5:
 		print("\t[ Ok ] Price to Book value")
 	else:
 		print("\t[Fail] Price to Book value")
@@ -95,17 +97,18 @@ def defensive_investor_portafolio(ticker):
 
 def main():
 	#
-	tickerSwitcher = "ticker list"
+	# tickerSwitcher = "ticker list"
+	tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['CTL','ADS','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		for ticker in ticker_list:
 			print(ticker)
 			print(ticker,": ", defensive_investor_portafolio(ticker))
 	
 
-	elif tickerSwitcher is "NASDAQ":
-		ticker_nasdaq = getNASDAQTickerList()
+	elif tickerSwitcher is "S&P500":
+		SP500_ticker = getSP500TickerList()
 		for index, ticker in SP500_ticker.iterrows():
 			print(ticker["Symbol"])
 			try:
@@ -113,14 +116,14 @@ def main():
 			except KeyError:
 				pass
 
-	elif tickerSwitcher is "S&P500":
-		SP500_ticker = getSP500TickerList()
+	elif tickerSwitcher is "NASDAQ":
+		ticker_nasdaq = getNASDAQTickerList()
 		for index,ticker in ticker_nasdaq.iterrows():
 			#print (ticker["ETF"])
 			if "N" in ticker["ETF"]: 
 				print(ticker["Symbol"])
 				print(ticker["Symbol"],": ", defensive_investor_portafolio(ticker["Symbol"]))
-				print()
+				print("\n")
 
 if __name__ == '__main__':
 	main()
