@@ -652,6 +652,18 @@ class Fundamental_Analysis(object):
 
 		return True
 
+	def __timelineCheck(self,timeline):
+		try:
+			self.prev_timeline
+		except : # Check the correct exception
+			self.prev_timeline = timeline
+			raise
+
+		if self.prev_timeline == timeline:
+			return True
+		else:
+			return False
+
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
@@ -1340,7 +1352,7 @@ def __fundamental_test():
 	#print (TRL.enterpriseEBITDA())
 	#print(TRL.grahamNumber())
 	print(TRL.priceEarning('quarterly'))
-	#print 
+	print(TRL.valuations) 
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
