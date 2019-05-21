@@ -4,6 +4,51 @@ from decimal import *
 def defensive_investor_portafolio(ticker):
 	TMK = stock(ticker)
 
+
+	######################## Total Debt vs Current Ratio ################
+	'''
+	Debt to current ratio secures low debt load to the company
+
+	try:
+		TMK.debtPerCurrentRatio('quarterly')
+	except Exception as insta:
+		return False
+
+	if TMK.financial["debt-current-ratio"][0] < 1.10:
+		print("\t[ Ok ] Debt to Current ratio")
+	else:
+		print("\t[Fail] Debt to Current ratio")
+		return False
+	'''
+
+	####################### Liabilities vs assets #################
+	'''
+	Current Liabilities or the ratio between assets over liabilities be greater than 2
+	'''
+	try:
+		TMK.currentRatio('quarterly')
+	except Exception as insta:
+		return False
+
+	if TMK.financial["current-ratio"][0] > 2:
+		print("\t[ Ok ] Current ratio")
+	else:
+		print("\t[Fail] Current ratio")
+		return False
+
+	################################ Price to assets #########################
+	'''
+	Make sure that assets to price is not too expensive
+	'''
+	print(TMK.grahamNumber('quarterly'))
+	print(TMK.priceGraham('quarterly'))
+	TMK.priceBookRatio('quarterly')
+	if TMK.valuations["Price-Book"][0] < 1.2:
+		print("\t[ Ok ] Price to Book value")
+	else:
+		print("\t[Fail] Price to Book value")
+		return False
+
 	####################### Enterprise Size ######################
 	'''
 	Maker sure the enterprise has more than certain amount of sales a year
@@ -17,20 +62,14 @@ def defensive_investor_portafolio(ticker):
 		print("\t[Fail] Sales/Enterprise Size")
 		return False
 
-	####################### Liabilities vs assets #################
+	###################### Dividends more than 20 years ###########################
 	'''
-	Current Liabilities or the ratio between assets over liabilities be greater than 2
+	Pay dividends
 	'''
-	TMK.income('quarterly')
-	try:
-		TMK.currentRatio('quarterly')
-	except Exception as insta:
-		return False
-
-	if TMK.financial["current-ratio"][0] > 2:
-		print("\t[ Ok ] Current ratio")
+	if TMK.dividendCheck():
+		print("\t[ Ok ] Dividends")
 	else:
-		print("\t[Fail] Current ratio")
+		print("\t[Fail] Dividends")
 		return False
 
 	########################## Earnings stability over 10 years ##################
@@ -44,17 +83,6 @@ def defensive_investor_portafolio(ticker):
 			return False
 		
 	print("\t[ Ok ] Earnings per share Stability")
-
-
-	###################### Dividends more than 20 years ###########################
-	'''
-	Pay dividends
-	'''
-	if TMK.dividendCheck():
-		print("\t[ Ok ] Dividends")
-	else:
-		print("\t[Fail] Dividends")
-		return False
 
 	####################### Earnings growth and profitablity ######################
 	'''
@@ -80,28 +108,16 @@ def defensive_investor_portafolio(ticker):
 		print("\t[Fail] Price earnings")
 		return False
 	'''
-
-	################################ Price to assets #########################
-	'''
-	Make sure that assets to price is not too expensive
-	'''
-	TMK.priceBookRatio('quarterly')
-	if TMK.valuations["Price-Book"][0] < 1.5:
-		print("\t[ Ok ] Price to Book value")
-	else:
-		print("\t[Fail] Price to Book value")
-		return False
-
 	############################# End ####################################
 	return True
 
 def main():
 	#
 	tickerSwitcher = "ticker list"
-	# tickerSwitcher = "S&P500"
+	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['CTL','ADS','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		for ticker in ticker_list:
 			print(ticker)
 			print(ticker,": ", defensive_investor_portafolio(ticker))
@@ -109,12 +125,20 @@ def main():
 
 	elif tickerSwitcher is "S&P500":
 		SP500_ticker = getSP500TickerList()
+		passTestStock = []
+
 		for index, ticker in SP500_ticker.iterrows():
 			print(ticker["Symbol"])
 			try:
-				print(ticker["Symbol"],": ", defensive_investor_portafolio(ticker["Symbol"]))
+				worthy = defensive_investor_portafolio(ticker["Symbol"])
+				print(ticker["Symbol"],": ", worthy)
+				if worthy:
+					passTestStock.append(ticker["Symbol"])
+
 			except KeyError:
 				pass
+
+		print("Stock to look into: ", passTestStock)
 
 	elif tickerSwitcher is "NASDAQ":
 		ticker_nasdaq = getNASDAQTickerList()

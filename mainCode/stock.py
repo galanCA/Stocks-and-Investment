@@ -185,7 +185,8 @@ class Fundamental_Analysis(object):
 			self.EPS(timeline)
 
 		graham_number = []
-		for EPS, PB in zip(self.valuations["Price-Book"], self.financial["EPS"]):
+		for EPS, PB in zip(self.valuations["book value per share"], self.financial["EPS"]):
+			print (EPS,PB)
 			graham_number.append(sqrt(PE_max*PB_max*EPS*PB))
 
 		self.valuations["Graham-number"] = graham_number
@@ -413,6 +414,21 @@ class Fundamental_Analysis(object):
 	self.__createFinancialMetrics()
 	self.financial
 	'''
+	def debtPerCurrentRatio(self, timeline='annual'):
+		self.__timelineCheck(timeline)
+		self.__createFinancialMetrics()
+		self.__createBalanceMetrics(timeline)
+
+		if not self.__missingStatementInformation(self.financial,"current-ratio"):
+			self.currentRatio(timeline)
+
+		debt2current = []
+		for debt, current_ratio in zip(self.balance_stmts["totalLiab"],self.financial["current-ratio"]):
+			debt2current.append(debt/current_ratio)
+
+		self.financial["debt-current-ratio"] = debt2current
+		return self.financial["debt-current-ratio"]
+
 	def currentRatio(self,timeline='annual'):
 		'''
 		'''
@@ -711,6 +727,8 @@ class Fundamental_Analysis(object):
 				del self.trading
 			except AttributeError:
 				pass
+
+			self.prev_timeline = timeline
 
 			return False
 
@@ -1376,7 +1394,7 @@ def __other_test():
 	print (result)
 
 def __fundamental_test():
-	ticker =  "MMM"
+	ticker =  "ADS"
 	TRL = stock(ticker)
 	'''
 	print (TRL.balance())
@@ -1391,7 +1409,7 @@ def __fundamental_test():
 	print (TRL.EVperRevenue())
 	print (TRL.priceSalesRatio())
 	'''
-	#print (TRL.priceBookRatio())
+	print (TRL.priceBookRatio('quarterly'))
 	#print (TRL.RevenuePerShare())
 	#print (TRL.priceSalesRatio())
 	#try:
@@ -1401,8 +1419,8 @@ def __fundamental_test():
 	#print (TRL.EBITDA())
 	#print (TRL.enterpriseEBITDA())
 	#print(TRL.grahamNumber())
-	print(TRL.priceEarning('quarterly'))
-	print(TRL.valuations) 
+	#print(TRL.priceEarning('quarterly'))
+	#print(TRL.valuations) 
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
@@ -1425,6 +1443,14 @@ def __dividendsExtract():
 	print(TRL.dividend(from_date='2008-08-15', to_date='2018-09-15'))
 	print(TRL.dividendCheck())	
 
+def __checkChange():
+	ticker = 'ADS'
+	TMK = stock(ticker)
+	TMK.income()
+	print(TMK.income_stmts)
+	TMK.currentRatio('quarterly')
+	print(TMK.financial)
+
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
@@ -1432,3 +1458,4 @@ if __name__=="__main__":
 	#__time_lookup_day_values()
 	#__testTickerlist()
 	#__dividendsExtract()
+	#__checkChange()
