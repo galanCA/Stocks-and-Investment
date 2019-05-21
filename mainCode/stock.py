@@ -106,6 +106,7 @@ class Fundamental_Analysis(object):
 		self.fundamentals = YahooFinancials(ticker)
 
 	def balance(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		self.balance_stmts = self.__statements(timeline, 'balance')
 		if self.balance_stmts.empty:
 			return None
@@ -113,10 +114,12 @@ class Fundamental_Analysis(object):
 		return self.balance_stmts
 
 	def income(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		self.income_stmts = self.__statements(timeline, 'income')
 		return self.income_stmts
 
 	def cash(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		self.cash_stmts = self.__statements(timeline, 'cash')
 		return self.cash_stmts
 
@@ -148,6 +151,7 @@ class Fundamental_Analysis(object):
 	self.valuations
 	'''
 	def priceEarning(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createFinancialMetrics()
@@ -168,6 +172,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["price-earnings"]
 
 	def grahamNumber(self, timeline='annual', PE_max=15.0, PB_max=1.5):
+		self.__timelineCheck(timeline)
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createFinancialMetrics()
@@ -188,6 +193,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["Graham-number"] 
 
 	def priceGraham(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 
@@ -206,6 +212,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["price-Graham"]
 
 	def EVperRevenue(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		'''
 		Enterprise Value per revenue: 
 		'''
@@ -227,6 +234,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["ev_revenue"]
 
 	def priceBookValue(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		self.__createValuationMetrics()
 		self.__createMarketCap()
 
@@ -242,6 +250,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["PB"]
 
 	def enterpriseValue(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		'''
 		Enterprise Value: How much would it cost to buy the company outright
 
@@ -267,6 +276,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["EV"]
 
 	def trailingPE(self, timeline='annual'):
+		self.__timelineCheck(timeline)
 		'''
 		trailing Price Earning ratio
 		'''
@@ -277,6 +287,7 @@ class Fundamental_Analysis(object):
 		'''
 		foward PE ratio
 		'''
+		self.__timelineCheck(timeline)
 
 		raise Exception("To be developt")
 
@@ -289,6 +300,7 @@ class Fundamental_Analysis(object):
 
 		https://www.investopedia.com/terms/b/bookvalue.asp
 		'''
+		self.__timelineCheck(timeline)
 		# Check if the data has being loaded
 		self.__createBalanceMetrics(timeline)
 		self.__createValuationMetrics()
@@ -329,6 +341,9 @@ class Fundamental_Analysis(object):
 
 		self.__downloadBalanceStockInformation(self.balance_stmts)
 		'''
+		self.__timelineCheck(timeline)
+
+
 		self.__createFinancialMetrics()
 		self.__createValuationMetrics()
 		self.__createBalanceMetrics(timeline)
@@ -355,6 +370,8 @@ class Fundamental_Analysis(object):
 		'''
 		price to book ratio: define as price per share over book value per share
 		'''
+		self.__timelineCheck(timeline)
+
 		self.__createValuationMetrics()
 		self.__createIncomeMetrics(timeline)
 		self.__checkpdIndex(self.valuations, self.income_stmts.index)
@@ -399,6 +416,7 @@ class Fundamental_Analysis(object):
 	def currentRatio(self,timeline='annual'):
 		'''
 		'''
+		self.__timelineCheck(timeline)
 		self.__createFinancialMetrics()
 		self.__createBalanceMetrics(timeline)
 		self.__checkpdIndex(self.financial, self.balance_stmts.index)
@@ -416,6 +434,8 @@ class Fundamental_Analysis(object):
 		Revenue per share or sales per shares: 
 
 		'''
+		self.__timelineCheck(timeline)
+
 		self.__createFinancialMetrics()
 		self.__createIncomeMetrics(timeline)
 		self.__createOutstandShMetrics()
@@ -434,6 +454,8 @@ class Fundamental_Analysis(object):
 
 		link: https://www.fool.com/knowledge-center/how-to-calculate-earnings-per-share-on-a-balance-s.aspx
 		'''
+		self.__timelineCheck(timeline)
+
 		# Check if the data has being loaded
 		self.__createIncomeMetrics(timeline)
 		self.__createOutstandShMetrics()
@@ -464,6 +486,7 @@ class Fundamental_Analysis(object):
 		No clue what this is
 		'''
 		#raise Exception("To be Developt")
+		self.__timelineCheck(timeline)
 
 		self.__createFinancialMetrics()
 		self.__createIncomeMetrics(timeline)
@@ -519,8 +542,11 @@ class Fundamental_Analysis(object):
 				return False
 
 		return True
+	
 	'''
 	### Trading ####
+	self.__createTradingMetrics()
+	self.trading
 	'''
 	def beta(self):
 		'''
@@ -655,13 +681,37 @@ class Fundamental_Analysis(object):
 	def __timelineCheck(self,timeline):
 		try:
 			self.prev_timeline
-		except : # Check the correct exception
+		except AttributeError: # Check the correct exception
 			self.prev_timeline = timeline
-			raise
 
 		if self.prev_timeline == timeline:
 			return True
 		else:
+			try:
+				del self.income_stmts
+			except AttributeError:
+				pass
+			try:
+				del self.balance_stmts
+			except AttributeError:
+				pass
+			try:
+				del self.cash_stmts
+			except AttributeError:
+				pass
+			try:
+				del self.valuations
+			except AttributeError:
+				pass
+			try:
+				del self.financial
+			except AttributeError:
+				pass
+			try:
+				del self.trading
+			except AttributeError:
+				pass
+
 			return False
 
 class Technical_Analysis(object):

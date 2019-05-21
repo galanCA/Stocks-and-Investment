@@ -97,8 +97,8 @@ def defensive_investor_portafolio(ticker):
 
 def main():
 	#
-	# tickerSwitcher = "ticker list"
-	tickerSwitcher = "S&P500"
+	tickerSwitcher = "ticker list"
+	# tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 		ticker_list = ['CTL','ADS','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
