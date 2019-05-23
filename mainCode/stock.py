@@ -146,6 +146,34 @@ class Fundamental_Analysis(object):
 	'''
 
 	'''
+	#### Single output ###
+	self.__createTTMMetrics()
+	self.TTM
+	'''
+	def trailingEPS(self):
+		'''
+		Trailing EPS:
+		'''	
+		
+		self.__createTTMMetrics()
+		self.__createOutstandShMetrics()
+		income_raw = self.__getTTMIncome()
+		
+		for net_income in income_raw["netIncome"]:
+			TTM = TTM + net_income
+
+		self.TTM["EPS"] = TTM/self.outstanding_shares
+		return self.TTM["EPS"]
+
+	def trailingPE(self, timeline='annual'):
+		self.__timelineCheck(timeline)
+		'''
+		trailing Price Earning ratio
+		'''
+		raise Exception("To be developt")
+		pass
+
+	'''
 	### Valuations ####
 	self.__createValuationMetrics()
 	self.valuations
@@ -171,29 +199,36 @@ class Fundamental_Analysis(object):
 
 		return self.valuations["price-earnings"]
 
-	def grahamNumber(self, timeline='annual', PE_max=15.0, PB_max=1.5):
-		self.__timelineCheck(timeline)
+	def grahamNumber(self, PE_max=15.0, PB_max=1.5):
+		'''
+		I am going to return one number 
+		sum the net income to get a value and use the actual equation
+		'''
+		self.__timelineCheck('quaterly')
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createFinancialMetrics()
 
 		# check if statemnts values exists
-		if not self.__missingStatementInformation(self.valuations,"Price-Book"):
-			self.priceBookRatio(timeline)
+		if not self.__missingStatementInformation(self.valuations,"book value per share"):
+			self.bookValuePerShare(timeline)
 
+		'''
 		if not self.__missingStatementInformation(self.financial,"EPS"):
 			self.EPS(timeline)
+		'''
+
+		self.trailingEPS()
 
 		graham_number = []
-		for EPS, PB in zip(self.valuations["book value per share"], self.financial["EPS"]):
-			print (EPS,PB)
+		for EPS, PB in zip(self.valuations["book value per share"], self.TTM["EPS"]):
 			graham_number.append(sqrt(PE_max*PB_max*EPS*PB))
 
 		self.valuations["Graham-number"] = graham_number
 
 		return self.valuations["Graham-number"] 
 
-	def priceGraham(self, timeline='annual'):
+	def priceGraham(self):
 		self.__timelineCheck(timeline)
 		# Check if data has being loaded
 		self.__createValuationMetrics()
@@ -234,22 +269,6 @@ class Fundamental_Analysis(object):
 
 		return self.valuations["ev_revenue"]
 
-	def priceBookValue(self, timeline='annual'):
-		self.__timelineCheck(timeline)
-		self.__createValuationMetrics()
-		self.__createMarketCap()
-
-		# Check statement values exists
-		if not self.__missingStatementInformation(self.valuations,"book value"):
-			self.bookValue(timeline)
-
-		PB = []
-		for book in self.valuations["book value"]:
-			PB.append(float(self.market_cap)/float(book))
-
-		self.valuations["PB"] = PB
-		return self.valuations["PB"]
-
 	def enterpriseValue(self, timeline='annual'):
 		self.__timelineCheck(timeline)
 		'''
@@ -276,14 +295,6 @@ class Fundamental_Analysis(object):
 		self.valuations["EV"] = EV
 		return self.valuations["EV"]
 
-	def trailingPE(self, timeline='annual'):
-		self.__timelineCheck(timeline)
-		'''
-		trailing Price Earning ratio
-		'''
-		raise Exception("To be developt")
-		pass
-
 	def fowardPE(self, timeline='annual'):
 		'''
 		foward PE ratio
@@ -291,6 +302,31 @@ class Fundamental_Analysis(object):
 		self.__timelineCheck(timeline)
 
 		raise Exception("To be developt")
+
+	def bookValuePerShare(self, timeline='annual'):
+		'''
+		book value: tangable assets minus liabilities
+		Tangable assets define as total assets minus intangable assets
+
+		Assuptions: Current outstanding shares are the same througout the years
+
+		https://www.investopedia.com/terms/b/bookvalue.asp
+		'''
+		self.__timelineCheck(timeline)
+		self.__createValuationMetrics()
+		self.__createOutstandShMetrics()
+		self.__createBalanceMetrics(timeline)
+		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+
+		self.__missingStatementInformation(self.balance_stmts,"totalStockholderEquity")
+		#self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
+
+		bvps = []
+		for equity in self.balance_stmts["totalStockholderEquity"]:
+			bvps.append(equity/self.outstanding_shares)
+
+		self.valuations["book value per share"] = bvps
+		return self.valuations["book value per share"]
 
 	def bookValue(self, timeline='annual'):
 		'''
@@ -305,7 +341,7 @@ class Fundamental_Analysis(object):
 		# Check if the data has being loaded
 		self.__createBalanceMetrics(timeline)
 		self.__createValuationMetrics()
-		self.__createOutstandShMetrics()
+		#self.__createOutstandShMetrics()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
 
 		self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
@@ -313,16 +349,14 @@ class Fundamental_Analysis(object):
 		self.__missingStatementInformation(self.balance_stmts,"totalLiab")
 
 		book_value = []
-		book_value_per_share = []
 		for total_assets, intangible_assets, total_liability in zip(self.balance_stmts["totalAssets"],self.balance_stmts["intangibleAssets"],self.balance_stmts["totalLiab"]):
 			tangable_assets = total_assets - intangible_assets
 			book_value.append(tangable_assets - total_liability)
-			book_value_per_share.append((tangable_assets - total_liability)/self.outstanding_shares)
 
 		self.valuations["book value"] = book_value
-		self.valuations["book value per share"] = book_value_per_share
+		#self.valuations["book value per share"] = book_value_per_share
 
-		return [self.valuations["book value"], self.valuations["book value per share"]]
+		return self.valuations["book value"]
 
 	def PEG(self, timeline='annual'):
 		'''
@@ -378,7 +412,7 @@ class Fundamental_Analysis(object):
 		self.__checkpdIndex(self.valuations, self.income_stmts.index)
 
 		if not self.__missingStatementInformation(self.valuations, "book value per share"):
-			self.bookValue(timeline)
+			self.bookValuePerShare(timeline)
 
 		if not self.__missingStatementInformation(self.income_stmts, "Close"):
 			if not self.__downloadBalanceStockInformation(self.income_stmts):
@@ -393,6 +427,23 @@ class Fundamental_Analysis(object):
 		self.valuations["Price-Book"] = PB
 
 		return self.valuations["Price-Book"]
+
+	def priceBookValue(self, timeline='annual'):
+		raise Exception("Repricated")
+		self.__timelineCheck(timeline)
+		self.__createValuationMetrics()
+		self.__createMarketCap()
+
+		# Check statement values exists
+		if not self.__missingStatementInformation(self.valuations,"book value"):
+			self.bookValue(timeline)
+
+		PB = []
+		for book in self.valuations["book value"]:
+			PB.append(float(self.market_cap)/float(book))
+
+		self.valuations["PB"] = PB
+		return self.valuations["PB"]
 
 	def enterpriseEBITDA(self,timeline='annual'):
 		'''
@@ -489,7 +540,7 @@ class Fundamental_Analysis(object):
 			if isnan(dividends):
 				total_earnings = net_income
 			else:
-				total_earnings = net_income+dividends
+				total_earnings = net_income#+dividends
 
 			EPS.append(total_earnings/self.outstanding_shares)
 
@@ -518,11 +569,6 @@ class Fundamental_Analysis(object):
 
 		for net_income, interest_expenses, depreciation in zip(self.income_stmts["netIncome"],self.income_stmts["interestExpense"], self.cash_stmts["depreciation"]):
 			print(net_income+ interest_expenses+depreciation)
-
-	def TTM(self):
-		'''
-		'''
-		raise Exception("To be developt")
 
 	def dividendCheck(self, years=20):
 		'''
@@ -572,6 +618,15 @@ class Fundamental_Analysis(object):
 	'''
 	### Private Functions ###
 	'''
+	def __createTTMMetrics(self):
+		try:
+			self.TTM
+		except AttributeError:
+			self.TTM = pd.DataFrame(
+
+
+				)
+
 	def __createOutstandShMetrics(self):
 		try:
 			self.outstanding_shares
@@ -731,6 +786,23 @@ class Fundamental_Analysis(object):
 			self.prev_timeline = timeline
 
 			return False
+
+	def __getTTMIncome(self):
+		try:
+			self.prev_timeline
+		except AttributeError:
+			self.__createIncomeMetrics()
+			return self.income_stmts
+
+		if self.prev_timeline is 'quarterly':
+			self.__createIncomeMetrics()
+			return self.income_stmts
+
+		else:
+			return self.__statements('quarterly','income')
+
+
+
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
@@ -1394,22 +1466,21 @@ def __other_test():
 	print (result)
 
 def __fundamental_test():
-	ticker =  "ADS"
+	ticker =  "SNA"
 	TRL = stock(ticker)
-	'''
-	print (TRL.balance())
-	print (TRL.income())
-	print (TRL.cash())
-	print (TRL.cash('quarterly'))
-	print (TRL.EPS())
-	print (TRL.bookValue())
-	print (TRL.marketCap())
-	print (TRL.enterpriseValue())
-	print (TRL.priceBookValue())
-	print (TRL.EVperRevenue())
-	print (TRL.priceSalesRatio())
-	'''
-	print (TRL.priceBookRatio('quarterly'))
+	#print (TRL.balance())
+	#print (TRL.income())
+	#print (TRL.cash())
+	#print (TRL.cash('quarterly'))
+	print(TRL.outstandingShares())
+	print (TRL.EPS('quarterly'))
+	#print (TRL.bookValue())
+	#print (TRL.marketCap())
+	#print (TRL.enterpriseValue())
+	#print (TRL.priceBookValue())
+	#print (TRL.EVperRevenue())
+	#print (TRL.priceSalesRatio())
+	#print (TRL.priceBookRatio('quarterly'))
 	#print (TRL.RevenuePerShare())
 	#print (TRL.priceSalesRatio())
 	#try:
@@ -1418,9 +1489,11 @@ def __fundamental_test():
 	#	print ("shit")
 	#print (TRL.EBITDA())
 	#print (TRL.enterpriseEBITDA())
-	#print(TRL.grahamNumber())
+	print(TRL.grahamNumber('quarterly'))
+	print(TRL.priceGraham('quarterly'))
 	#print(TRL.priceEarning('quarterly'))
 	#print(TRL.valuations) 
+	print(TRL.bookValuePerShare('quarterly'))
 
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
