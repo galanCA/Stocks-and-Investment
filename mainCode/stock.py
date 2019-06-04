@@ -76,7 +76,6 @@ import time
 import itertools
 import numpy
 
-
 from ftplib 			import FTP
 from lxml 				import html 
 from time 				import sleep
@@ -165,13 +164,16 @@ class Fundamental_Analysis(object):
 		self.TTM["EPS"] = TTM/self.outstanding_shares
 		return self.TTM["EPS"]
 
-	def trailingPE(self, timeline='annual'):
-		self.__timelineCheck(timeline)
+	def trailingPE(self):
 		'''
 		trailing Price Earning ratio
 		'''
-		raise Exception("To be developt")
-		pass
+
+		#self.__timelineCheck(timeline)
+
+		self.TTM["PE"] = self.trade_history[0]/self.TTM["EPS"]
+
+		return self.TTM["PE"]
 
 	'''
 	### Valuations ####
@@ -800,9 +802,6 @@ class Fundamental_Analysis(object):
 
 		else:
 			return self.__statements('quarterly','income')
-
-
-
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
