@@ -153,27 +153,56 @@ class Fundamental_Analysis(object):
 		'''
 		Trailing EPS:
 		'''	
-		
 		self.__createTTMMetrics()
 		self.__createOutstandShMetrics()
+		self.__checkpdIndex(self.TTM,[datetime.date.today()])
+
 		income_raw = self.__getTTMIncome()
 		
+		ttm = 0
 		for net_income in income_raw["netIncome"]:
-			TTM = TTM + net_income
+			ttm = ttm + net_income
 
-		self.TTM["EPS"] = TTM/self.outstanding_shares
+		self.TTM["EPS"] = (float(ttm)/self.outstanding_shares)
+
 		return self.TTM["EPS"]
 
 	def trailingPE(self):
 		'''
 		trailing Price Earning ratio
 		'''
+		self.__createTTMMetrics()
+		if not self.__missingStatementInformation(self.TTM, "EPS"):
+			self.trailingEPS()
 
-		#self.__timelineCheck(timeline)
-
-		self.TTM["PE"] = self.trade_history[0]/self.TTM["EPS"]
+		self.TTM["PE"] = self.trade_history["Close"][-1]/self.TTM["EPS"]
 
 		return self.TTM["PE"]
+	
+	def bookValuePerShare(self):
+		'''
+		book value: tangable assets minus liabilities
+		Tangable assets define as total assets minus intangable assets
+
+		Assuptions: Current outstanding shares are the same througout the years
+
+		https://www.investopedia.com/terms/b/bookvalue.asp
+		'''
+		self.__createValuationMetrics()
+		self.__createOutstandShMetrics()
+		self.__createBalanceMetrics()
+		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+
+		self.__missingStatementInformation(self.balance_stmts,"totalStockholderEquity")
+		#self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
+
+		bvps = []
+		for equity in self.balance_stmts["totalStockholderEquity"]:
+			total_equity = equity
+
+		self.valuations["book value per share"] = total_equity/self.outstanding_shares
+		return self.valuations["book value per share"]
+
 
 	'''
 	### Valuations ####
@@ -304,31 +333,6 @@ class Fundamental_Analysis(object):
 		self.__timelineCheck(timeline)
 
 		raise Exception("To be developt")
-
-	def bookValuePerShare(self, timeline='annual'):
-		'''
-		book value: tangable assets minus liabilities
-		Tangable assets define as total assets minus intangable assets
-
-		Assuptions: Current outstanding shares are the same througout the years
-
-		https://www.investopedia.com/terms/b/bookvalue.asp
-		'''
-		self.__timelineCheck(timeline)
-		self.__createValuationMetrics()
-		self.__createOutstandShMetrics()
-		self.__createBalanceMetrics(timeline)
-		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
-
-		self.__missingStatementInformation(self.balance_stmts,"totalStockholderEquity")
-		#self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
-
-		bvps = []
-		for equity in self.balance_stmts["totalStockholderEquity"]:
-			bvps.append(equity/self.outstanding_shares)
-
-		self.valuations["book value per share"] = bvps
-		return self.valuations["book value per share"]
 
 	def bookValue(self, timeline='annual'):
 		'''
@@ -624,10 +628,7 @@ class Fundamental_Analysis(object):
 		try:
 			self.TTM
 		except AttributeError:
-			self.TTM = pd.DataFrame(
-
-
-				)
+			self.TTM = pd.DataFrame()
 
 	def __createOutstandShMetrics(self):
 		try:
@@ -791,9 +792,10 @@ class Fundamental_Analysis(object):
 
 	def __getTTMIncome(self):
 		try:
-			self.prev_timeline
+			self.prev_timeline 
+
 		except AttributeError:
-			self.__createIncomeMetrics()
+			self.__createIncomeMetrics('quarterly')
 			return self.income_stmts
 
 		if self.prev_timeline is 'quarterly':
@@ -1471,8 +1473,8 @@ def __fundamental_test():
 	#print (TRL.income())
 	#print (TRL.cash())
 	#print (TRL.cash('quarterly'))
-	print(TRL.outstandingShares())
-	print (TRL.EPS('quarterly'))
+	#print(TRL.outstandingShares())
+	#print (TRL.EPS('quarterly'))
 	#print (TRL.bookValue())
 	#print (TRL.marketCap())
 	#print (TRL.enterpriseValue())
@@ -1488,12 +1490,18 @@ def __fundamental_test():
 	#	print ("shit")
 	#print (TRL.EBITDA())
 	#print (TRL.enterpriseEBITDA())
-	print(TRL.grahamNumber('quarterly'))
-	print(TRL.priceGraham('quarterly'))
+	#print(TRL.grahamNumber('quarterly'))
+	#print(TRL.priceGraham('quarterly'))
 	#print(TRL.priceEarning('quarterly'))
 	#print(TRL.valuations) 
-	print(TRL.bookValuePerShare('quarterly'))
+	
 
+	# Single output
+	#print ("TTM EPS: ", TRL.trailingEPS())
+	print ("TTM PE: ", TRL.trailingPE())
+	#print(TRL.bookValuePerShare())
+
+	print (TRL.TTM)
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
 	#print TRL.trade_history
