@@ -136,74 +136,6 @@ class Fundamental_Analysis(object):
 	self.__createValuationMetrics()
 	self.valuations
 	'''
-	def priceEarning(self, timeline='annual'):
-		self.__timelineCheck(timeline)
-		# Check if data has being loaded
-		self.__createValuationMetrics()
-		self.__createFinancialMetrics()
-		self.__checkpdIndex(self.valuations, self.financial.index)
-
-		if not self.__missingStatementInformation(self.financial,"EPS"):
-			self.EPS(timeline)
-
-		if not self.__missingStatementInformation(self.income_stmts, "Close"):
-			self.__downloadBalanceStockInformation(self.income_stmts)
-
-		PE = []
-		for price, eps in zip(self.income_stmts["Close"], self.financial["EPS"]):
-			PE.append(price/eps)
-
-		self.valuations["price-earnings"] = PE
-
-		return self.valuations["price-earnings"]
-
-	def grahamNumber(self, PE_max=15.0, PB_max=1.5):
-		'''
-		I am going to return one number 
-		sum the net income to get a value and use the actual equation
-		'''
-		self.__timelineCheck('quaterly')
-		# Check if data has being loaded
-		self.__createValuationMetrics()
-		self.__createFinancialMetrics()
-
-		# check if statemnts values exists
-		if not self.__missingStatementInformation(self.valuations,"book value per share"):
-			self.bookValuePerShare(timeline)
-
-		'''
-		if not self.__missingStatementInformation(self.financial,"EPS"):
-			self.EPS(timeline)
-		'''
-
-		self.trailingEPS()
-
-		graham_number = []
-		for EPS, PB in zip(self.valuations["book value per share"], self.TTM["EPS"]):
-			graham_number.append(sqrt(PE_max*PB_max*EPS*PB))
-
-		self.valuations["Graham-number"] = graham_number
-
-		return self.valuations["Graham-number"] 
-
-	def priceGraham(self):
-		self.__timelineCheck(timeline)
-		# Check if data has being loaded
-		self.__createValuationMetrics()
-
-		if not self.__missingStatementInformation(self.valuations,"Graham-number"):
-			self.grahamNumber(timeline)
-
-		if not self.__missingStatementInformation(self.income_stmts, "Close"):
-			self.__downloadBalanceStockInformation(self.income_stmts)
-
-		PG = []
-		for GN, price in zip(self.valuations["Graham-number"], self.income_stmts["Close"]):
-			PG.append((price)/GN*100)
-
-		self.valuations["price-Graham"] = PG
-
-		return self.valuations["price-Graham"]
 
 	def EVperRevenue(self, timeline='annual'):
 		self.__timelineCheck(timeline)
@@ -333,33 +265,6 @@ class Fundamental_Analysis(object):
 
 
 		#raise Exception("To be developt")
-
-	def priceBookRatio(self,timeline='annual'):
-		'''
-		price to book ratio: define as price per share over book value per share
-		'''
-		self.__timelineCheck(timeline)
-
-		self.__createValuationMetrics()
-		self.__createIncomeMetrics(timeline)
-		self.__checkpdIndex(self.valuations, self.income_stmts.index)
-
-		if not self.__missingStatementInformation(self.valuations, "book value per share"):
-			self.bookValuePerShare(timeline)
-
-		if not self.__missingStatementInformation(self.income_stmts, "Close"):
-			if not self.__downloadBalanceStockInformation(self.income_stmts):
-				#raise Exception("not enought data available")
-				return None
-
-		PB = []
-
-		for close, bps in zip(self.income_stmts["Close"], self.valuations["book value per share"]):
-			PB.append(close/bps)
-
-		self.valuations["Price-Book"] = PB
-
-		return self.valuations["Price-Book"]
 
 	def priceBookValue(self, timeline='annual'):
 		raise Exception("Depricated")
@@ -549,11 +454,7 @@ class Fundamental_Analysis(object):
 	self.__createTradingMetrics()
 	self.trading
 	'''
-	'''
-	#### Single output ###
-	self.__createTTMMetrics()
-	self.TTM
-	'''
+
 	def outstandingShares(self):
 		'''
 		Outstanding Shares: all the amount the shares for that company 
@@ -601,9 +502,9 @@ class Fundamental_Analysis(object):
 		if not self.__missingStatementInformation(self.trading, "TTM-EPS"):
 			self.trailingEPS()
 
-		self.trading["PE"] = self.trade_history["Close"][-1]/self.trading["TTM-EPS"]
+		self.trading["price-earnings"] = self.trade_history["Close"][-1]/self.trading["TTM-EPS"]
 
-		return self.trading["PE"]
+		return self.trading["price-earnings"]
 	
 	def bookValuePerShare(self):
 		'''
@@ -632,6 +533,54 @@ class Fundamental_Analysis(object):
 		'''
 		raise Exception("To be Developt")
 
+	def grahamNumber(self, PE_max=15.0, PB_max=1.5):
+		'''
+		I am going to return one number 
+		sum the net income to get a value and use the actual equation
+		'''
+
+		# Check if data has being loaded
+		self.__createTradingMetrics()
+
+		# check if statemnts values exists
+		if not self.__missingStatementInformation(self.trading,"book value per share"):
+			self.bookValuePerShare()
+
+		if not self.__missingStatementInformation(self.trading,"TTM-EPS"):
+			self.trailingEPS()
+
+		graham_number = sqrt(PE_max*PB_max*self.trading["TTM-EPS"]*self.trading["book value per share"])
+		
+		self.trading["Graham-number"] = graham_number
+
+		return self.trading["Graham-number"] 
+
+	def priceGraham(self):
+		# Check if data has being loaded
+		self.__createValuationMetrics()
+
+		if not self.__missingStatementInformation(self.trading,"Graham-number"):
+			self.grahamNumber(timeline)
+
+		self.trading["price-Graham"] = self.trade_history["Close"][-1]/self.trading["Graham-number"]*100
+
+		return self.trading["price-Graham"]
+
+	def pricePerBookValue(self):
+		'''
+		Compare the 
+		'''
+		self.__createTradingMetrics()
+		self.__timelineCheck("quarterly")
+		self.__createIncomeMetrics(self.prev_timeline)
+
+		if not self.__missingStatementInformation(self.trading, "book value per share"):
+			self.bookValuePerShare()
+		
+		self.trading["price-book value"] = self.trade_history["Close"][-1]/self.trading["book value per share"]
+
+		return self.trading["price-book value"]
+
 	'''
 	### Private Functions ###
 	'''
@@ -649,6 +598,7 @@ class Fundamental_Analysis(object):
 			self.outstandingShares()
 
 	def __createMarketCap(self):
+		raise Exception("Depricated")
 		try:
 			self.market_cap
 		except AttributeError:
@@ -798,10 +748,6 @@ class Fundamental_Analysis(object):
 				pass
 			try:
 				del self.financial
-			except AttributeError:
-				pass
-			try:
-				del self.trading
 			except AttributeError:
 				pass
 
@@ -1487,7 +1433,7 @@ def __other_test():
 
 def __fundamental_test():
 	# Set up
-	ticker =  "KO"
+	ticker =  "SNA"
 	TRL = stock(ticker)
 
 	#print (TRL.balance())
@@ -1495,11 +1441,19 @@ def __fundamental_test():
 	#print (TRL.cash())
 
 	# Valuations
-
+	
+	
 	# Finances 
 
 	# Trading
+	print ( "TTM EPS: ", TRL.trailingEPS())
+	print ("TTM PE: ", TRL.trailingPE())
+	print(TRL.bookValuePerShare())
+	print(TRL.grahamNumber())
+	print(TRL.priceGraham())
+	print(TRL.pricePerBookValue())
 
+	print (TRL.trading)
 	
 	#print (TRL.cash('quarterly'))
 	#print(TRL.outstandingShares())
@@ -1526,11 +1480,7 @@ def __fundamental_test():
 	
 
 	# Single output
-	#print ( "TTM EPS: ", TRL.trailingEPS())
-	#print ("TTM PE: ", TRL.trailingPE())
-	print(TRL.bookValuePerShare())
-
-	print (TRL.trading)
+	
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
 	#print TRL.trade_history

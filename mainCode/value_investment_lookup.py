@@ -36,18 +36,25 @@ def defensive_investor_portafolio(ticker):
 		print("\t[Fail] Current ratio")
 		return False
 
-	################################ Price to assets #########################
+	########################### Price to earning ratio ############################
 	'''
-	Make sure that assets to price is not too expensive
+	Price to Earnings is su
 	'''
-	print(TMK.grahamNumber('quarterly'))
-	print(TMK.priceGraham('quarterly'))
-	print(TMK.)
-	TMK.priceBookRatio('quarterly')
-	if TMK.valuations["Price-Book"][0] < 1.2:
-		print("\t[ Ok ] Price to Book value")
+	
+	TMK.trailingPE('quarterly')
+	if TMK.trading["price-earnings"] < 22.5:
+		print("\t[ Ok ] Price earnings")
 	else:
-		print("\t[Fail] Price to Book value")
+		print("\t[Fail] Price earnings")
+		return False
+
+	########################## Price to assets ########################
+	TMK.pricePerBookValue()
+
+	if TMK.trading["price-book value"] < 2:
+		print("\t[ Ok ] Price book value")
+	else:
+		print("\t[Fail] Price book value")
 		return False
 
 	####################### Enterprise Size ######################
@@ -96,26 +103,15 @@ def defensive_investor_portafolio(ticker):
 		print("\t[Fail] Earnings per share Growth")
 		return False
 
-	########################### Price to earning ratio ############################
-	'''
-	Price to Earnings is su
-	'''
-	'''
-	TMK.priceEarning('quarterly')
-	#print (TMK.valuations["price-earnings"])
-	if TMK.valuations	["price-earnings"][0] > 10:
-		print("\t[ Ok ] Price earnings")
-	else:
-		print("\t[Fail] Price earnings")
-		return False
-	'''
+	
+	
 	############################# End ####################################
 	return True
 
 def main():
-	#
-	tickerSwitcher = "ticker list"
-	#tickerSwitcher = "S&P500"
+	#tickerSwitcher = "NASDAQ"
+	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 		ticker_list = ['SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
