@@ -42,6 +42,7 @@ def defensive_investor_portafolio(ticker):
 	'''
 	print(TMK.grahamNumber('quarterly'))
 	print(TMK.priceGraham('quarterly'))
+	print(TMK.)
 	TMK.priceBookRatio('quarterly')
 	if TMK.valuations["Price-Book"][0] < 1.2:
 		print("\t[ Ok ] Price to Book value")

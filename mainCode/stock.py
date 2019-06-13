@@ -52,7 +52,7 @@ Goal is to extract
 		TTM 						- To work on
 		ROE
 
-	Trading informations
+	Trading informations - single values0
 		Beta
 		50-Day Moving Average
 		200 DayMoving Average
@@ -127,82 +127,9 @@ class Fundamental_Analysis(object):
 		'''
 		raise Exception("To be developt")
 
-	def outstandingShares(self):
-		self.outstanding_shares = self.fundamentals.get_num_shares_outstanding()
-		return self.outstanding_shares
-
-	def marketCap(self):
-		'''
-		get market cap through yahoo,
-
-		TODO: Calculate your own 
-		'''
-		self.market_cap = self.fundamentals.get_market_cap()
-		return self.market_cap
-
 	'''
 	################# Information Derived from statements ####################
 	'''
-
-	'''
-	#### Single output ###
-	self.__createTTMMetrics()
-	self.TTM
-	'''
-	def trailingEPS(self):
-		'''
-		Trailing EPS:
-		'''	
-		self.__createTTMMetrics()
-		self.__createOutstandShMetrics()
-		self.__checkpdIndex(self.TTM,[datetime.date.today()])
-
-		income_raw = self.__getTTMIncome()
-		
-		ttm = 0
-		for net_income in income_raw["netIncome"]:
-			ttm = ttm + net_income
-
-		self.TTM["EPS"] = (float(ttm)/self.outstanding_shares)
-
-		return self.TTM["EPS"]
-
-	def trailingPE(self):
-		'''
-		trailing Price Earning ratio
-		'''
-		self.__createTTMMetrics()
-		if not self.__missingStatementInformation(self.TTM, "EPS"):
-			self.trailingEPS()
-
-		self.TTM["PE"] = self.trade_history["Close"][-1]/self.TTM["EPS"]
-
-		return self.TTM["PE"]
-	
-	def bookValuePerShare(self):
-		'''
-		book value: tangable assets minus liabilities
-		Tangable assets define as total assets minus intangable assets
-
-		Assuptions: Current outstanding shares are the same througout the years
-
-		https://www.investopedia.com/terms/b/bookvalue.asp
-		'''
-		self.__createValuationMetrics()
-		self.__createOutstandShMetrics()
-		self.__createBalanceMetrics()
-		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
-
-		self.__missingStatementInformation(self.balance_stmts,"totalStockholderEquity")
-		#self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
-
-		bvps = []
-		for equity in self.balance_stmts["totalStockholderEquity"]:
-			total_equity = equity
-
-		self.valuations["book value per share"] = total_equity/self.outstanding_shares
-		return self.valuations["book value per share"]
-
 
 	'''
 	### Valuations ####
@@ -435,7 +362,7 @@ class Fundamental_Analysis(object):
 		return self.valuations["Price-Book"]
 
 	def priceBookValue(self, timeline='annual'):
-		raise Exception("Repricated")
+		raise Exception("Depricated")
 		self.__timelineCheck(timeline)
 		self.__createValuationMetrics()
 		self.__createMarketCap()
@@ -511,12 +438,15 @@ class Fundamental_Analysis(object):
 
 		self.__createFinancialMetrics()
 		self.__createIncomeMetrics(timeline)
-		self.__createOutstandShMetrics()
+		self.__createTradingMetrics()
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
+
+		if not self.__missingStatementInformation(self.trading, "Outstanding shares"):
+			self.outstandingShares()
 
 		revenue_per_share = []
 		for revenue in self.income_stmts["totalRevenue"]:
-			revenue_per_share.append(revenue/self.outstanding_shares)
+			revenue_per_share.append(revenue/self.trading["Outstanding shares"])
 
 		self.financial["revenue-per-share"] = revenue_per_share
 		return self.financial["revenue-per-share"]
@@ -531,10 +461,13 @@ class Fundamental_Analysis(object):
 
 		# Check if the data has being loaded
 		self.__createIncomeMetrics(timeline)
-		self.__createOutstandShMetrics()
 		self.__createCashMetrics(timeline)
 		self.__createFinancialMetrics()
+		self.__createTradingMetrics()
 		self.__checkpdIndex(self.financial, self.income_stmts.index)
+
+		if not self.__missingStatementInformation(self.trading, "Outstanding shares"):
+			self.outstandingShares()
 
 		# Check statement values exists
 		self.__missingStatementInformation(self.cash_stmts,"dividendsPaid")
@@ -548,7 +481,7 @@ class Fundamental_Analysis(object):
 			else:
 				total_earnings = net_income#+dividends
 
-			EPS.append(total_earnings/self.outstanding_shares)
+			EPS.append(total_earnings/self.trading["Outstanding shares"])
 
 		self.financial["EPS"] = EPS
 
@@ -616,6 +549,84 @@ class Fundamental_Analysis(object):
 	self.__createTradingMetrics()
 	self.trading
 	'''
+	'''
+	#### Single output ###
+	self.__createTTMMetrics()
+	self.TTM
+	'''
+	def outstandingShares(self):
+		'''
+		Outstanding Shares: all the amount the shares for that company 
+		'''
+		self.__createTradingMetrics()
+		self.trading["Outstanding shares"] = self.fundamentals.get_num_shares_outstanding()
+		
+		return self.trading["Outstanding shares"]
+
+	def marketCap(self):
+		'''
+		get market cap through yahoo,
+
+		TODO: Calculate your own 
+		'''
+		self.__createTradingMetrics()
+		self.trading["market-cap"] = self.fundamentals.get_market_cap()
+		return self.trading["market-cap"]
+
+	def trailingEPS(self):
+		'''
+		Trailing EPS:
+
+		'''	
+		self.__createTradingMetrics()
+		if not self.__missingStatementInformation(self.trading, "Outstanding shares"):
+			self.outstandingShares()
+
+		income_raw = self.__getTTMIncome()
+		
+		ttm = 0
+		for net_income in income_raw["netIncome"]:
+			ttm = ttm + net_income
+
+		self.trading["TTM-EPS"] = (float(ttm)/self.trading["Outstanding shares"])
+
+		return self.trading["TTM-EPS"]
+
+	def trailingPE(self):
+		'''
+		trailing Price Earning ratio
+
+		'''
+		self.__createTradingMetrics()
+		if not self.__missingStatementInformation(self.trading, "TTM-EPS"):
+			self.trailingEPS()
+
+		self.trading["PE"] = self.trade_history["Close"][-1]/self.trading["TTM-EPS"]
+
+		return self.trading["PE"]
+	
+	def bookValuePerShare(self):
+		'''
+		book value: tangable assets minus liabilities
+		Tangable assets define as total assets minus intangable assets
+
+		Assuptions: Current outstanding shares are the same througout the years
+
+		https://www.investopedia.com/terms/b/bookvalue.asp
+		'''
+		self.__createTradingMetrics()
+		self.__createBalanceMetrics("quarterly")
+
+		if not self.__missingStatementInformation(self.trading, "Outstanding shares"):
+			self.outstandingShares()
+
+		self.__missingStatementInformation(self.balance_stmts,"totalStockholderEquity")
+		#self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
+
+		self.trading["book value per share"] = self.balance_stmts["totalStockholderEquity"][0]/self.trading["Outstanding shares"]
+		
+		return self.trading["book value per share"]
+
 	def beta(self):
 		'''
 		'''
@@ -631,6 +642,7 @@ class Fundamental_Analysis(object):
 			self.TTM = pd.DataFrame()
 
 	def __createOutstandShMetrics(self):
+		raise Exception("Depricated")
 		try:
 			self.outstanding_shares
 		except AttributeError:
@@ -677,6 +689,13 @@ class Fundamental_Analysis(object):
 			self.financial
 		except AttributeError:
 			self.financial = pd.DataFrame()
+
+	def __createTradingMetrics(self):
+		try:
+			self.trading
+		except AttributeError:
+			self.trading = pd.DataFrame()
+			self.__checkpdIndex(self.trading,[datetime.date.today()])
 
 	def __statements(self, timeline, type_stmts):
 		if "annual" in timeline or "quarterly" in timeline:
@@ -1467,11 +1486,21 @@ def __other_test():
 	print (result)
 
 def __fundamental_test():
-	ticker =  "SNA"
+	# Set up
+	ticker =  "KO"
 	TRL = stock(ticker)
+
 	#print (TRL.balance())
 	#print (TRL.income())
 	#print (TRL.cash())
+
+	# Valuations
+
+	# Finances 
+
+	# Trading
+
+	
 	#print (TRL.cash('quarterly'))
 	#print(TRL.outstandingShares())
 	#print (TRL.EPS('quarterly'))
@@ -1497,11 +1526,11 @@ def __fundamental_test():
 	
 
 	# Single output
-	#print ("TTM EPS: ", TRL.trailingEPS())
-	print ("TTM PE: ", TRL.trailingPE())
-	#print(TRL.bookValuePerShare())
+	#print ( "TTM EPS: ", TRL.trailingEPS())
+	#print ("TTM PE: ", TRL.trailingPE())
+	print(TRL.bookValuePerShare())
 
-	print (TRL.TTM)
+	print (TRL.trading)
 
 	#print TRL.valuations[["book value per share","Price-Book", "PB"]]
 	#print TRL.trade_history
