@@ -41,8 +41,9 @@ def defensive_investor_portafolio(ticker):
 	Price to Earnings is su
 	'''
 	
-	TMK.trailingPE('quarterly')
-	if TMK.trading["price-earnings"] < 22.5:
+	TMK.trailingPE()
+	#print(TMK.trading["price-earnings"][0])
+	if TMK.trading["price-earnings"][0] < 22.5:
 		print("\t[ Ok ] Price earnings")
 	else:
 		print("\t[Fail] Price earnings")
@@ -51,7 +52,7 @@ def defensive_investor_portafolio(ticker):
 	########################## Price to assets ########################
 	TMK.pricePerBookValue()
 
-	if TMK.trading["price-book value"] < 2:
+	if TMK.trading["price-book value"][0] < 2:
 		print("\t[ Ok ] Price book value")
 	else:
 		print("\t[Fail] Price book value")
@@ -85,7 +86,7 @@ def defensive_investor_portafolio(ticker):
 	10 Years of Profits will make sure the enterprise is a sound enterprise
 	'''
 	TMK.EPS()
-	for eps in TMK.financial["EPS"]:
+	for  eps in TMK.financial["EPS"]:
 		if eps < 0:
 			print("\t[Fail] Earnings per share Stability")
 			return False
@@ -114,7 +115,7 @@ def main():
 	tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		for ticker in ticker_list:
 			print(ticker)
 			print(ticker,": ", defensive_investor_portafolio(ticker))

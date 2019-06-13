@@ -386,7 +386,7 @@ class Fundamental_Analysis(object):
 			else:
 				total_earnings = net_income#+dividends
 
-			EPS.append(total_earnings/self.trading["Outstanding shares"])
+			EPS.append(total_earnings/self.trading["Outstanding shares"][0])
 
 		self.financial["EPS"] = EPS
 
@@ -764,7 +764,7 @@ class Fundamental_Analysis(object):
 			return self.income_stmts
 
 		if self.prev_timeline is 'quarterly':
-			self.__createIncomeMetrics()
+			self.__createIncomeMetrics("quarterly")
 			return self.income_stmts
 
 		else:
