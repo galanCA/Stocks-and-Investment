@@ -4,7 +4,6 @@ from decimal import *
 def defensive_investor_portafolio(ticker):
 	TMK = stock(ticker)
 
-
 	######################## Total Debt vs Current Ratio ################
 	'''
 	Debt to current ratio secures low debt load to the company
@@ -109,13 +108,30 @@ def defensive_investor_portafolio(ticker):
 	############################# End ####################################
 	return True
 
+def asdadsd(ticker):
+	TMK = stock(ticker)
+
+	###################### Current price to book ratio #################
+	TMK.pricePerBookValue()
+
+	TMK.trading["price-book value"][0]
+
+	TMK.valuation["book value"][0]
+
+
+
+
+	###################### When to sell #############
+
+
+
 def main():
-	#tickerSwitcher = "NASDAQ"
+	tickerSwitcher = "NASDAQ"
 	#tickerSwitcher = "ticker list"
-	tickerSwitcher = "S&P500"
+	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['GSBC','AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		for ticker in ticker_list:
 			print(ticker)
 			print(ticker,": ", defensive_investor_portafolio(ticker))
@@ -140,12 +156,23 @@ def main():
 
 	elif tickerSwitcher is "NASDAQ":
 		ticker_nasdaq = getNASDAQTickerList()
-		for index,ticker in ticker_nasdaq.iterrows():
-			#print (ticker["ETF"])
+		passTestStock = []
+		nasdaq_length = len(ticker_nasdaq)
+
+		for index, ticker in ticker_nasdaq.iterrows():
+
 			if "N" in ticker["ETF"]: 
-				print(ticker["Symbol"])
-				print(ticker["Symbol"],": ", defensive_investor_portafolio(ticker["Symbol"]))
+				print(float(index)/float(nasdaq_length)	,"% ", ticker["Symbol"])
+				try:
+					worthy = defensive_investor_portafolio(ticker["Symbol"])
+				except KeyError:
+					continue
+				print(ticker["Symbol"],": ", worthy)
 				print("\n")
+				if worthy:
+					passTestStock.append(ticker["Symbol"])
+
+		print("Stock to look into: ", passTestStock)
 
 if __name__ == '__main__':
 	main()
