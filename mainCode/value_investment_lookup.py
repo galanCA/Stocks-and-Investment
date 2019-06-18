@@ -133,16 +133,12 @@ def valueStocks(ticker):
 
 	###################### Current price to book ratio #################
 	TMK.bookValuePerShare()
+	TMK.pricePerBookValue()
 
-	TMK.valuation["book value per share"][0]
-
-	print ("Current Price: ", TMK.trade_history[-1])
-	print ("Book value: ", TMK.valuation["book value per share"][0])
-	print ("Percent return ", (TMK.valuation["book value per share"][0]-TMK.trade_history[-1])/TMK.trade_history[-1], "%")
-
-	
-
-
+	print ("Current Price: ", TMK.trade_history["Close"][-1])
+	print ("Book value: ", TMK.trading["book value per share"][0])
+	print ("Percent return: %0.2f%%" %(100*(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
+	print ("Price - book value: ", TMK.trading["price-book value"] )
 
 
 	###################### When to sell #############
@@ -151,18 +147,18 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	tickerSwitcher = "ticker list"
+	#tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['CMCTP','GSBC','AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['CMCTP','CMCT','CNXN', 'GBDC']#,'GSBC','AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		passTestStock = []
 		for ticker in ticker_list:
-			worthy = defensive_investor_portafolio(ticker["Symbol"])
 			print(ticker)
-			print(ticker,": ", worthy)
+			worthy = defensive_investor_portafolio(ticker)
+			print(ticker,": ", worthy,"\n")
 			if worthy:
-				passTestStock.append(ticker["Symbol"])
+				passTestStock.append(ticker)
 	
 
 	elif tickerSwitcher is "S&P500":
@@ -203,8 +199,11 @@ def main():
 
 		print("Stock to look into: ", passTestStock)
 
+	print("Stockk that pass the test")
 	for ticker in passTestStock:
+		print (ticker)
 		valueStocks(ticker)
+		print(" ")
 
 
 if __name__ == '__main__':
