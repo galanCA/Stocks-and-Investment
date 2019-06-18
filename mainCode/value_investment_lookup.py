@@ -2,7 +2,10 @@ from stock import stock, getNASDAQTickerList, getSP500TickerList
 from decimal import *
 
 def defensive_investor_portafolio(ticker):
-	TMK = stock(ticker)
+	try:
+		TMK = stock(ticker)
+	except:
+		return False	
 
 	######################## Total Debt vs Current Ratio ################
 	'''
@@ -129,16 +132,20 @@ def valueStocks(ticker):
 		Check how managment is doing
 	'''
 
-	TMK = stock(ticker)
+	TMK = stock(ticker)	
+
 
 	###################### Current price to book ratio #################
 	TMK.bookValuePerShare()
 	TMK.pricePerBookValue()
 
 	print ("Current Price: ", TMK.trade_history["Close"][-1])
-	print ("Book value: ", TMK.trading["book value per share"][0])
-	print ("Percent return: %0.2f%%" %(100*(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
-	print ("Price - book value: ", TMK.trading["price-book value"] )
+	print ("Book value: %0.2f" %(TMK.trading["book value per share"][0]))
+	
+	print ("Price - book value: %0.2f " %(TMK.trading["price-book value"][0]))
+	print ("Sell at: %0.2f" % (TMK.trading["book value per share"][0]*2))
+
+	print ("Percent return: %0.2f%%" %(100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
 
 	###################### When to sell #############
@@ -147,14 +154,14 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['CMCTP','CMCT','CNXN', 'GBDC']#,'GSBC','AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['CMCTP','CMCT','CNXN', 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		passTestStock = []
 		for ticker in ticker_list:
-			print(ticker)
+			print(ticker)	
 			worthy = defensive_investor_portafolio(ticker)
 			print(ticker,": ", worthy,"\n")
 			if worthy:
@@ -197,9 +204,9 @@ def main():
 				if worthy:
 					passTestStock.append(ticker["Symbol"])
 
-		print("Stock to look into: ", passTestStock)
+	print("Stock to look into: ", passTestStock)
 
-	print("Stockk that pass the test")
+	print("Stock that pass the test")
 	for ticker in passTestStock:
 		print (ticker)
 		valueStocks(ticker)

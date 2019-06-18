@@ -1409,7 +1409,6 @@ def getOtherTickerList():
 	ticker = pd.DataFrame(data=ticker_list[1:-1],
 							columns=ticker_list[0])
 
-
 def getSP500TickerList():
 	data = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
 	table = data[0]
