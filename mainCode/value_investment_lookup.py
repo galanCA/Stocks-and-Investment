@@ -108,7 +108,7 @@ def defensive_investor_portafolio(ticker):
 	############################# End ####################################
 	return True
 
-def asdadsd(ticker):
+def msgBuild(ticker):
 	TMK = stock(ticker)
 
 	###################### Current price to book ratio #################
@@ -117,9 +117,6 @@ def asdadsd(ticker):
 	TMK.trading["price-book value"][0]
 
 	TMK.valuation["book value"][0]
-
-
-
 
 	###################### When to sell #############
 
