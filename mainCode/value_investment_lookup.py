@@ -1,5 +1,15 @@
+import sys
+sys.path.append('../Functions and Libs/')
+
 from stock import stock, getNASDAQTickerList, getSP500TickerList
 from decimal import *
+from email_msg import emailMessage
+
+# Email
+to_email =
+from_email =  
+pwd_email = 
+title = "value stocks"
 
 def defensive_investor_portafolio(ticker):
 	try:
@@ -149,8 +159,13 @@ def valueStocks(ticker):
 
 	print ("Percent return: %0.2f%%" %(100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
-	###################### When to sell #############
 
+	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.0f\nPrice-book value:\t%0.2f\nSell at:\t\t%0.2f\nPercent return:\t\t%0.2f%%\n\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0],TMK.trading["book value per share"][0]*2,100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
+
+	###################### When to sell #############
+	#print (" ")
+	#print (msg)
+	return msg
 
 
 def main():
@@ -159,7 +174,7 @@ def main():
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['CMCTP','CMCT','CNXN', 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		passTestStock = []
 		for ticker in ticker_list:
 			print(ticker)	
@@ -208,10 +223,16 @@ def main():
 	print("Stock to look into: ", passTestStock)
 
 	print("Stock that pass the test")
+	email_msg = ""
 	for ticker in passTestStock:
 		print (ticker)
-		valueStocks(ticker)
+		email_msg = email_msg + valueStocks(ticker)
 		print(" ")
+
+	print("email content: ")
+	print(email_msg)
+
+	emailMessage(to_email, from_email, pwd_email, title, email_msg)
 
 
 if __name__ == '__main__':
