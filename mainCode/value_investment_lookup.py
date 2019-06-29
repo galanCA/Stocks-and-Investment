@@ -2,7 +2,10 @@ from stock import stock, getNASDAQTickerList, getSP500TickerList
 from decimal import *
 
 def defensive_investor_portafolio(ticker):
-	TMK = stock(ticker)
+	try:
+		TMK = stock(ticker)
+	except:
+		return False	
 
 	######################## Total Debt vs Current Ratio ################
 	'''
@@ -94,10 +97,24 @@ def defensive_investor_portafolio(ticker):
 
 	####################### Earnings growth and profitablity ######################
 	'''
-	Make sure the enterprise growth with at least inflation 3%
+	Make sure the enterprise growth with at least inflation 3% - uses (1 + 0.03)^Years
+
+	idealy get the 3 year average at the beginning and the end to prevent dips for a 10 year
+
+	This case will be 2 year average of 4 years
+
+	Curretly uses 12 for 
+
 	'''
-	eps_growth = 100*((TMK.financial["EPS"][0] - TMK.financial["EPS"][-1])/TMK.financial["EPS"][-1])
-	if eps_growth > 3:
+	
+	#print (TMK.financial["EPS"])
+	#print (TMK.financial["EPS"][0], TMK.financial["EPS"][2])
+	eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
+	eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
+
+
+	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
+	if eps_growth > 6:
 		print("\t[ Ok ] Earnings per share Growth")
 	else:
 		print("\t[Fail] Earnings per share Growth")
@@ -108,15 +125,29 @@ def defensive_investor_portafolio(ticker):
 	############################# End ####################################
 	return True
 
-def msgBuild(ticker):
-	TMK = stock(ticker)
+
+def valueStocks(ticker):
+	'''
+	Check When to buy when to sell. 
+		Find the risk-rewards
+		Check how managment is doing
+	'''
+
+	TMK = stock(ticker)	
+
 
 	###################### Current price to book ratio #################
+	TMK.bookValuePerShare()
 	TMK.pricePerBookValue()
 
-	TMK.trading["price-book value"][0]
 
-	TMK.valuation["book value"][0]
+	print ("Current Price: ", TMK.trade_history["Close"][-1])
+	print ("Book value: %0.2f" %(TMK.trading["book value per share"][0]))
+	
+	print ("Price - book value: %0.2f " %(TMK.trading["price-book value"][0]))
+	print ("Sell at: %0.2f" % (TMK.trading["book value per share"][0]*2))
+
+	print ("Percent return: %0.2f%%" %(100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
 	###################### When to sell #############
 
@@ -124,14 +155,18 @@ def msgBuild(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['GSBC','AMG','SNA','COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['CMCTP','CMCT','CNXN', 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		passTestStock = []
 		for ticker in ticker_list:
-			print(ticker)
-			print(ticker,": ", defensive_investor_portafolio(ticker))
+			print(ticker)	
+			worthy = defensive_investor_portafolio(ticker)
+			print(ticker,": ", worthy,"\n")
+			if worthy:
+				passTestStock.append(ticker)
 	
 
 	elif tickerSwitcher is "S&P500":
@@ -155,11 +190,12 @@ def main():
 		ticker_nasdaq = getNASDAQTickerList()
 		passTestStock = []
 		nasdaq_length = len(ticker_nasdaq)
+		print (nasdaq_length)
 
 		for index, ticker in ticker_nasdaq.iterrows():
 
 			if "N" in ticker["ETF"]: 
-				print(float(index)/float(nasdaq_length)	,"% ", ticker["Symbol"])
+				print("%s - %0.2f%%" % (ticker["Symbol"], float(index)/float(nasdaq_length)*100))
 				try:
 					worthy = defensive_investor_portafolio(ticker["Symbol"])
 				except KeyError:
@@ -169,7 +205,14 @@ def main():
 				if worthy:
 					passTestStock.append(ticker["Symbol"])
 
-		print("Stock to look into: ", passTestStock)
+	print("Stock to look into: ", passTestStock)
+
+	print("Stock that pass the test")
+	for ticker in passTestStock:
+		print (ticker)
+		valueStocks(ticker)
+		print(" ")
+
 
 if __name__ == '__main__':
 	main()

@@ -1126,6 +1126,9 @@ class Technical_Analysis(object):
 
 class stock(Technical_Analysis,Fundamental_Analysis):
 	def __init__(self, ticker, period=60, days=30, exchange='NASD', from_date=None, to_date=None):
+		#ticker_split = ticker.split(".")
+		#ticker = piece[-] for piece in ticker_split
+
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange, from_date=from_date, end_date=to_date)
 		Fundamental_Analysis.__init__(self, ticker)
 
@@ -1380,6 +1383,31 @@ def getNASDAQTickerList():
 							columns=ticker_list[0])
 
 	return ticker
+
+def getOtherTickerList():
+	ftp = FTP('ftp.nasdaqtrader.com')
+
+	# Test connection was successful
+	print(ftp.login())
+
+	ftp.cwd("SymbolDirectory")
+
+	#ftp.retrbinary("RETR nasdaqlisted.txt",open("nasdaqlisted.txt",wb).write)
+
+	lines = []
+	ftp.retrlines("RETR otherlisted.txt", lines.append)
+
+	#print (lines)
+
+	ftp.quit()
+
+	ticker_list = []
+	index = []
+	for l in lines:
+		ticker_list.append(l.split("|"))
+
+	ticker = pd.DataFrame(data=ticker_list[1:-1],
+							columns=ticker_list[0])
 
 def getSP500TickerList():
 	data = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
