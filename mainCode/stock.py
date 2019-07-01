@@ -94,7 +94,7 @@ pd.set_option('mode.chained_assignment', None)
 from pylab import *
 from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
      DayLocator, MONDAY, SecondLocator
-# from matplotlib.finance     
+# from matplotlib.finance
 #from mpl_finance import candlestick2, plot_day_summary, candlestick2
 
 class Fundamental_Analysis(object):

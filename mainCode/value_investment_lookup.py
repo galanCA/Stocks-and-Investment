@@ -150,7 +150,8 @@ def valueStocks(ticker):
 
 	###################### When to sell #############
 
-
+def createEmail():
+	pass
 
 def main():
 	tickerSwitcher = "NASDAQ"
@@ -158,7 +159,7 @@ def main():
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-		ticker_list = ['CMCTP','CMCT','CNXN', 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['OCCI','FRPH','CMCTP','CMCT','CNXN', 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 		passTestStock = []
 		for ticker in ticker_list:
 			print(ticker)	
