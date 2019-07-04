@@ -162,11 +162,11 @@ def valueStocks(ticker):
 
 	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.0f\nPrice-book value:\t%0.2f\nSell at:\t\t%0.2f\nPercent return:\t\t%0.2f%%\n\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0],TMK.trading["book value per share"][0]*2,100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
 
+
 	###################### When to sell #############
 	#print (" ")
 	#print (msg)
 	return msg
-
 
 def main():
 	tickerSwitcher = "NASDAQ"
@@ -175,6 +175,7 @@ def main():
 
 	if tickerSwitcher is "ticker list":
 		ticker_list = ['ENTXW','OCCI','CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+
 		passTestStock = []
 		for ticker in ticker_list:
 			print(ticker)	
