@@ -6,9 +6,9 @@ from decimal import *
 from email_msg import emailMessage
 
 # Email
-to_email =
-from_email =  
-pwd_email = 
+to_email = "galanc3.3@gmail.com"
+from_email = "galanc3.3@gmail.com"
+pwd_email = "Vivaldi3"
 title = "value stocks"
 
 def defensive_investor_portafolio(ticker):
@@ -119,9 +119,11 @@ def defensive_investor_portafolio(ticker):
 	
 	#print (TMK.financial["EPS"])
 	#print (TMK.financial["EPS"][0], TMK.financial["EPS"][2])
-	eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
-	eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
-
+	try: 
+		eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
+		eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
+	except IndexError:
+		return False
 
 	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
 	if eps_growth > 6:
@@ -170,12 +172,12 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 
-		ticker_list = ['CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['ENTXW','OCCI','CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 
 		passTestStock = []
 		for ticker in ticker_list:

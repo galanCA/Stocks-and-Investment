@@ -76,6 +76,7 @@ import time
 import itertools
 import numpy
 
+from functools			import reduce
 from ftplib 			import FTP
 from lxml 				import html 
 from time 				import sleep
@@ -934,6 +935,9 @@ class Technical_Analysis(object):
 
 		return RSI_value
 
+	def ATR(self,price):
+		pass
+
 	def price_difference(self, price):
 		diff = []
 
@@ -950,7 +954,7 @@ class Technical_Analysis(object):
 
 		return [up_gain, down_gain]
 
-	def SMA(self, price="close", period=20, plot_data = True):
+	def SMA(self, price="Close", period=20, plot_data = True):
 		sma = []
 		for i in range(period,len(self.trade_history[price])):
 			# take the average of i-period to i
@@ -959,11 +963,11 @@ class Technical_Analysis(object):
 			sma.append(temp)
 
 		if plot_data:
-			self.__techincal_plot(self.trade_history["date"][time_period:len(self.trade_history[price_use])], sma)
+			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], sma)
 
 		return sma
 
-	def EMA(self, price="close", period=20, plot_data = True):
+	def EMA(self, price="Close", period=20, plot_data = True):
 		sma = self.SMA(price=price, period=period, plot_data=False)
 		wma = (2/(period+1))
 		ema = []
@@ -1125,9 +1129,10 @@ class Technical_Analysis(object):
 		plt.show()
 
 class stock(Technical_Analysis,Fundamental_Analysis):
-	def __init__(self, ticker, period=60, days=30, exchange='NASD', from_date=None, to_date=None):
-		#ticker_split = ticker.split(".")
-		#ticker = piece[-] for piece in ticker_split
+	def __init__(self, ticker, period=30, days=30, exchange='NASD', from_date=None, to_date=None):
+		'''
+		Period: how many days of data to collect
+		'''
 
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange, from_date=from_date, end_date=to_date)
 		Fundamental_Analysis.__init__(self, ticker)
@@ -1538,11 +1543,20 @@ def __checkChange():
 	TMK.currentRatio('quarterly')
 	print(TMK.financial)
 
+def __technical_test():
+	ticker =  "SPOT"
+	TRL = stock(ticker)
+	print (len(TRL.trade_history.index))
+
+	#TRL.plot()
+	#TRL.SMA()
+
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
-	__fundamental_test()
+	#__fundamental_test()
 	#__time_lookup_day_values()
 	#__testTickerlist()
 	#__dividendsExtract()
 	#__checkChange()
+	__technical_test()
