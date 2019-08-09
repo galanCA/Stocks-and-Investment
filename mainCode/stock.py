@@ -910,7 +910,7 @@ class Technical_Analysis(object):
 
 		return breach_number
 
-	def RSI(self, price_use="close",time_period=14, plot_data = True):
+	def RSI(self, price_use="Close",time_period=14, plot_data = True):
 
 		if (price_use != "close"): # or (price_use != "open"):
 			raise Exception("price choose its not correct") 
@@ -957,28 +957,42 @@ class Technical_Analysis(object):
 	def SMA(self, price="Close", period=20, plot_data = True):
 		sma = []
 		for i in range(period,len(self.trade_history[price])):
-			# take the average of i-period to i
-			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i])/period
+			# take the average of i-period to i-1 (the minus 1 acounts for the start of 0)
+			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i-1])/period
 
 			sma.append(temp)
 
 		if plot_data:
+			self.__checkPlot()
+			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],sma)
 			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], sma)
 
 		return sma
 
 	def EMA(self, price="Close", period=20, plot_data = True):
 		sma = self.SMA(price=price, period=period, plot_data=False)
-		wma = (2/(period+1))
+		K = (2/(period+1))
+		#print (sma[0])
 		ema = []
-		for i in range(period, len(self.trade_history[price])):
-			ema.append( self.trade_history[price][i]-ema[i-1]*wma + ema[i-1] )
+		ema.append((self.trade_history[price][period]*K)+(sma[0]*(1-K)))
+
+		for i in range(period+1, len(self.trade_history[price])):
+			ema.append((self.trade_history[price][i]*K)+ ema[-1]*(1-K))
 
 		if plot_data:
-			self.__techincal_plot(self.trade_history["date"][time_period:len(self.trade_history[price_use])], ema)
+			self.__checkPlot()
+			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],ema)
+			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], ema)
 
 		return ema
 
+	def MACD(self, price="Close",fast_ema=12,slow_ema=26, signal=9):
+		emaf = self.EMA(period=fast_ema, plot_data = False)
+		emas = self.EMA(period=slow_ema, plot_data = False)
+		MACD = np.array(emaf[slow_ema-fast_ema-1:-1]) - np.array(emas)
+		
+
+		
 	def Bolli_Bands(self, period=20, std_multipliyer=2, plot_data=True):
 		sma = self.SMA(period=period, plot_data= False)
 		upper_band = sma + (np.std(sma)*std_multipliyer)
@@ -991,12 +1005,6 @@ class Technical_Analysis(object):
 			self.__techincal_plot(time, lower_bands)
 
 		return [sma, upper_band, lower_band]
-
-	def MACD(self,short_period = 12, long_period=26):
-		short_term_ema = self.EMA(period=short_period)
-		long_term_emd = self.EMA(period=long_period)
-
-		#signal line
 
 	def PPO(self):
 		pass
@@ -1021,14 +1029,16 @@ class Technical_Analysis(object):
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
 		alldays    = DayLocator()              # minor ticks on the days
 		minute = MinuteLocator()
-		weekFormatter = DateFormatter('%b %d %H:%M:%S')  # e.g., Jan 12
+		weekFormatter = DateFormatter('%b %d') #('%b %d %H:%M:%S')  # e.g., Jan 12
 		dayFormatter = DateFormatter('%d')      # e.g., 12
-		fig, ax = plt.subplots()
+		fig, self.candle_data = plt.subplots()
+		self.ax2 = self.candle_data.twinx()
+		
 		fig.subplots_adjust(bottom=0.2)
 		#ax.xaxis.set_major_locator(mondays)
 		#ax.xaxis.set_minor_locator(alldays)
-		ax.xaxis.set_major_formatter(weekFormatter)
-		self._candlestick(ax,
+		self.candle_data.xaxis.set_major_formatter(weekFormatter)
+		self._candlestick(self.candle_data,
 					self.trade_history.index,
 					self.trade_history["Open"],
 					self.trade_history["Close"],
@@ -1036,11 +1046,12 @@ class Technical_Analysis(object):
 					self.trade_history["Low"],
 					width=0.0006, colorup="g", colordown="r")
 
-		ax.xaxis_date()
-		ax.autoscale_view()
+		self.candle_data.xaxis_date()
+		self.candle_data.autoscale_view()
 		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+		plt.grid(True)
 
-		plt.show()
+		plt.draw()
 
 	def _candlestick(self,ax, date,open,close,high,low, width=0.2, colorup='k', colordown='r',
 		alpha=1.0, ochl=True):
@@ -1123,13 +1134,19 @@ class Technical_Analysis(object):
 		return lines, patches
 
 	def __techincal_plot(self, time, data):
-		fig = plt.figure()
+		self.techplot = plt.figure()
 		plt.plot(time, data)
 		plt.grid(True)
-		plt.show()
+		plt.draw()
+
+	def __checkPlot(self):
+		try:
+			self.ax2
+		except AttributeError:
+			self.plot()
 
 class stock(Technical_Analysis,Fundamental_Analysis):
-	def __init__(self, ticker, period=30, days=30, exchange='NASD', from_date=None, to_date=None):
+	def __init__(self, ticker, period=900, days=30, exchange='NASD', from_date=None, to_date=None):
 		'''
 		Period: how many days of data to collect
 		'''
@@ -1546,10 +1563,20 @@ def __checkChange():
 def __technical_test():
 	ticker =  "SPOT"
 	TRL = stock(ticker)
-	print (len(TRL.trade_history.index))
+	#print (TRL.trade_history["Close"])
 
-	#TRL.plot()
-	#TRL.SMA()
+	TRL.plot()
+	TRL.SMA(period=50)
+	TRL.EMA(period=22)
+	TRL.EMA(period=11)
+	TRL.MACD()
+
+	
+	
+	#print("plot", TRL.candle_data)
+	#print("SMA", TRL.techplot)
+	plt.show()
+
 
 if __name__=="__main__":
 	#__parent_classes()
