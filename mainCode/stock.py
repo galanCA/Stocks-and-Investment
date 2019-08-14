@@ -936,6 +936,8 @@ class Technical_Analysis(object):
 		return RSI_value
 
 	def ATR(self,price):
+		'''
+		'''
 		pass
 
 	def price_difference(self, price):
@@ -971,13 +973,14 @@ class Technical_Analysis(object):
 
 	def EMA(self, price="Close", period=20, plot_data = True):
 		sma = self.SMA(price=price, period=period, plot_data=False)
-		K = (2/(period+1))
-		#print (sma[0])
+		K = (2/(float(period)+1))
+		#print (K)
 		ema = []
 		ema.append((self.trade_history[price][period]*K)+(sma[0]*(1-K)))
 
 		for i in range(period+1, len(self.trade_history[price])):
-			ema.append((self.trade_history[price][i]*K)+ ema[-1]*(1-K))
+			#print(self.trade_history[price][i]*K,ema[-1]*(1-K))
+			ema.append( (self.trade_history[price][i]*K) + ema[-1]*(1-K) )
 
 		if plot_data:
 			self.__checkPlot()
@@ -990,8 +993,6 @@ class Technical_Analysis(object):
 		emaf = self.EMA(period=fast_ema, plot_data = False)
 		emas = self.EMA(period=slow_ema, plot_data = False)
 		MACD = np.array(emaf[slow_ema-fast_ema-1:-1]) - np.array(emas)
-		
-
 		
 	def Bolli_Bands(self, period=20, std_multipliyer=2, plot_data=True):
 		sma = self.SMA(period=period, plot_data= False)
@@ -1569,7 +1570,7 @@ def __technical_test():
 	TRL.SMA(period=50)
 	TRL.EMA(period=22)
 	TRL.EMA(period=11)
-	TRL.MACD()
+	#TRL.MACD()
 
 	
 	
