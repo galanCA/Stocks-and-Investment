@@ -12,10 +12,10 @@ pwd_email = "Vivaldi3"
 title = "value stocks"
 
 def defensive_investor_portafolio(ticker):
-	try:
-		TMK = stock(ticker)
-	except:
-		return False	
+	#try:
+	TMK = stock(ticker)
+	#except:
+	#	return False	
 
 	######################## Total Debt vs Current Ratio ################
 	'''
@@ -52,8 +52,11 @@ def defensive_investor_portafolio(ticker):
 	'''
 	Price to Earnings is su
 	'''
-	
-	TMK.trailingPE()
+	try:
+		TMK.trailingPE()
+	except:
+		return False
+
 	#print(TMK.trading["price-earnings"][0])
 	if TMK.trading["price-earnings"][0] < 22.5:
 		print("\t[ Ok ] Price earnings")
@@ -119,9 +122,11 @@ def defensive_investor_portafolio(ticker):
 	
 	#print (TMK.financial["EPS"])
 	#print (TMK.financial["EPS"][0], TMK.financial["EPS"][2])
-	eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
-	eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
-
+	try:
+		eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
+		eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
+	except IndexError:
+		return False
 
 	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
 	if eps_growth > 6:
@@ -170,7 +175,7 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	tickerSwitcher = "ticker list"
+	#tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
