@@ -7,8 +7,8 @@ from email_msg import emailMessage
 
 # Email
 to_email = "galanc3.3@gmail.com"
-from_email =  "galanc3.3@gmail.com"
-pwd_email = "Vivaldi3"
+from_email = "galanc3.3@gmail.com"
+pwd_email = ""
 title = "value stocks"
 
 def defensive_investor_portafolio(ticker):
@@ -175,7 +175,7 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
