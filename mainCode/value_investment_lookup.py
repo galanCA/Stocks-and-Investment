@@ -11,11 +11,15 @@ from_email = "galanc3.3@gmail.com"
 pwd_email = "Vivaldi3"
 title = "value stocks"
 
-def defensive_investor_portafolio(ticker):
+def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=2,min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
 	try:
 		TMK = stock(ticker)
 	except:
-		return False	
+		return False
+
+	if (highprice <TMK.trade_history["Close"][-1]):
+		print ("\t [Fail] Price")
+		return False
 
 	######################## Total Debt vs Current Ratio ################
 	'''
@@ -42,7 +46,7 @@ def defensive_investor_portafolio(ticker):
 	except Exception as insta:
 		return False
 
-	if TMK.financial["current-ratio"][0] > 2:
+	if TMK.financial["current-ratio"][0] > max_current_ratio:
 		print("\t[ Ok ] Current ratio")
 	else:
 		print("\t[Fail] Current ratio")
@@ -52,19 +56,22 @@ def defensive_investor_portafolio(ticker):
 	'''
 	Price to Earnings is su
 	'''
-	
-	TMK.trailingPE()
-	#print(TMK.trading["price-earnings"][0])
-	if TMK.trading["price-earnings"][0] < 22.5:
+	try:
+		TMK.trailingPE()
+	except Exception as insta:
+		return False
+	if TMK.trading["price-earnings"][0] < min_price_earnings:
 		print("\t[ Ok ] Price earnings")
 	else:
 		print("\t[Fail] Price earnings")
 		return False
 
 	########################## Price to assets ########################
-	TMK.pricePerBookValue()
-
-	if TMK.trading["price-book value"][0] < 2:
+	try:
+		TMK.pricePerBookValue()
+	except Exception as insta:
+		return False
+	if TMK.trading["price-book value"][0] < max_price_book_value:
 		print("\t[ Ok ] Price book value")
 	else:
 		print("\t[Fail] Price book value")
@@ -74,10 +81,16 @@ def defensive_investor_portafolio(ticker):
 	'''
 	Maker sure the enterprise has more than certain amount of sales a year
 	'''
-	TMK.income()
+	try:
+		TMK.income()
+	except Exception as insta:
+		return False
+
+
+
 	if TMK.income_stmts.empty:
 		return False
-	if TMK.income_stmts["totalRevenue"][0] > 500000:
+	if TMK.income_stmts["totalRevenue"][0] > min_total_revenue:
 		print("\t[ Ok ] Sales/Enterprise Size")
 	else:
 		print("\t[Fail] Sales/Enterprise Size")
@@ -87,23 +100,32 @@ def defensive_investor_portafolio(ticker):
 	'''
 	Pay dividends
 	'''
-	if TMK.dividendCheck():
-		print("\t[ Ok ] Dividends")
-	else:
-		print("\t[Fail] Dividends")
-		return False
+	if dividends_on:
+		if TMK.dividendCheck():
+			print("\t[ Ok ] Dividends")
+		else:
+			print("\t[Fail] Dividends")
+			return False
 
 	########################## Earnings stability over 10 years ##################
 	'''
 	10 Years of Profits will make sure the enterprise is a sound enterprise
 	'''
-	TMK.EPS()
+	try:
+		TMK.EPS()
+	except Exception as insta:
+		return False
+	if all(i >= min_earnings_stability for i in TMK.financial["EPS"]):
+		print("\t[ Ok ] Earnings per share Stability")
+	else:
+		print("\t[Fail] Earnings per share Stability")
+	'''
 	for  eps in TMK.financial["EPS"]:
-		if eps < 0:
+		if eps < min_earnings_stability:
 			print("\t[Fail] Earnings per share Stability")
 			return False
-		
-	print("\t[ Ok ] Earnings per share Stability")
+	'''
+	
 
 	####################### Earnings growth and profitablity ######################
 	'''
@@ -126,7 +148,7 @@ def defensive_investor_portafolio(ticker):
 		return False
 
 	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
-	if eps_growth > 6:
+	if eps_growth > min_earnings_growth:
 		print("\t[ Ok ] Earnings per share Growth")
 	else:
 		print("\t[Fail] Earnings per share Growth")
@@ -172,12 +194,12 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	tickerSwitcher = "ticker list"
+	#tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
-
-		ticker_list = ['ENTXW','OCCI','CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		print ("Specific Ticker")
+		ticker_list = ['CNACU','ENTXW','OCCI','CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
 
 		passTestStock = []
 		for ticker in ticker_list:
@@ -189,13 +211,14 @@ def main():
 	
 
 	elif tickerSwitcher is "S&P500":
+		print("S&P 500 list")
 		SP500_ticker = getSP500TickerList()
 		passTestStock = []
 
 		for index, ticker in SP500_ticker.iterrows():
 			print(ticker["Symbol"])
 			try:
-				worthy = defensive_investor_portafolio(ticker["Symbol"])
+				worthy = defensive_investor_portafolio(ticker["Symbol"],dividends_on=False)
 				print(ticker["Symbol"],": ", worthy)
 				if worthy:
 					passTestStock.append(ticker["Symbol"])
@@ -206,17 +229,17 @@ def main():
 		print("Stock to look into: ", passTestStock)
 
 	elif tickerSwitcher is "NASDAQ":
+		print ("NASDAQ List")
 		ticker_nasdaq = getNASDAQTickerList()
 		passTestStock = []
 		nasdaq_length = len(ticker_nasdaq)
 		print (nasdaq_length)
-
+		#random.shuffle(lst)
 		for index, ticker in ticker_nasdaq.iterrows():
-
 			if "N" in ticker["ETF"]: 
 				print("%s - %0.2f%%" % (ticker["Symbol"], float(index)/float(nasdaq_length)*100))
 				try:
-					worthy = defensive_investor_portafolio(ticker["Symbol"])
+					worthy = defensive_investor_portafolio(ticker["Symbol"],dividends_on=False)
 				except KeyError:
 					continue
 				print(ticker["Symbol"],": ", worthy)

@@ -382,12 +382,15 @@ class Fundamental_Analysis(object):
 		EPS = []
 		
 		for net_income, dividends in zip(self.income_stmts["netIncome"], self.cash_stmts["dividendsPaid"]):
+			'''
 			if isnan(dividends):
 				total_earnings = net_income
 			else:
 				total_earnings = net_income#+dividends
 
 			EPS.append(total_earnings/self.trading["Outstanding shares"][0])
+			'''
+			EPS.append(net_income/self.trading["Outstanding shares"][0])
 
 		self.financial["EPS"] = EPS
 
@@ -497,7 +500,6 @@ class Fundamental_Analysis(object):
 	def trailingPE(self):
 		'''
 		trailing Price Earning ratio
-
 		'''
 		self.__createTradingMetrics()
 		if not self.__missingStatementInformation(self.trading, "TTM-EPS"):
@@ -788,7 +790,10 @@ class Technical_Analysis(object):
 		#self.date_correction()
 		#print self.trade_history
 		self.trade_history = self.reshape_data()
-		
+	
+	'''
+	### Initialization ###
+	'''	
 	def date_correction(self):
 		try:
 			if isinstance(self.trade_history["date"][0], datetime.datetime):
@@ -883,6 +888,59 @@ class Technical_Analysis(object):
 
 			return trade_interval
 
+	'''
+	### Trend-Following ###
+	'''
+	def SMA(self, price="Close", period=20, plot_data = True):
+		sma = []
+		for i in range(period,len(self.trade_history[price])):
+			# take the average of i-period to i-1 (the minus 1 acounts for the start of 0)
+			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i-1])/period
+
+			sma.append(temp)
+
+		if plot_data:
+			self.__checkPlot()
+			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],sma)
+			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], sma)
+
+		return sma
+
+	def EMA(self, price="Close", period=20, plot_data = True):
+		sma = self.SMA(price=price, period=period, plot_data=False)
+		K = (2/(float(period)+1))
+		#print (K)
+		ema = []
+		ema.append((self.trade_history[price][period]*K)+(sma[0]*(1-K)))
+
+		for i in range(period+1, len(self.trade_history[price])):
+			#print(self.trade_history[price][i]*K,ema[-1]*(1-K))
+			ema.append( (self.trade_history[price][i]*K) + ema[-1]*(1-K) )
+
+		if plot_data:
+			self.__checkPlot()
+			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],ema)
+			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], ema)
+
+		return ema
+
+	def MACD(self, price="Close",fast_ema=12,slow_ema=26, signal=9):
+		emaf = self.EMA(period=fast_ema, plot_data = False)
+		emas = self.EMA(period=slow_ema, plot_data = False)
+		MACD = np.array(emaf[slow_ema-fast_ema-1:-1]) - np.array(emas)
+
+	'''
+	### Oscillators ###
+	'''
+
+	'''
+	### Misc indicators ###
+	'''
+
+	'''
+	### Other ###
+	'''
+
 	def support_breach(self, plot_data=True):
 		breach_count = 0
 		closing_price = 0
@@ -955,44 +1013,6 @@ class Technical_Analysis(object):
 				down_gain.append(data)
 
 		return [up_gain, down_gain]
-
-	def SMA(self, price="Close", period=20, plot_data = True):
-		sma = []
-		for i in range(period,len(self.trade_history[price])):
-			# take the average of i-period to i-1 (the minus 1 acounts for the start of 0)
-			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i-1])/period
-
-			sma.append(temp)
-
-		if plot_data:
-			self.__checkPlot()
-			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],sma)
-			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], sma)
-
-		return sma
-
-	def EMA(self, price="Close", period=20, plot_data = True):
-		sma = self.SMA(price=price, period=period, plot_data=False)
-		K = (2/(float(period)+1))
-		#print (K)
-		ema = []
-		ema.append((self.trade_history[price][period]*K)+(sma[0]*(1-K)))
-
-		for i in range(period+1, len(self.trade_history[price])):
-			#print(self.trade_history[price][i]*K,ema[-1]*(1-K))
-			ema.append( (self.trade_history[price][i]*K) + ema[-1]*(1-K) )
-
-		if plot_data:
-			self.__checkPlot()
-			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],ema)
-			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], ema)
-
-		return ema
-
-	def MACD(self, price="Close",fast_ema=12,slow_ema=26, signal=9):
-		emaf = self.EMA(period=fast_ema, plot_data = False)
-		emas = self.EMA(period=slow_ema, plot_data = False)
-		MACD = np.array(emaf[slow_ema-fast_ema-1:-1]) - np.array(emas)
 		
 	def Bolli_Bands(self, period=20, std_multipliyer=2, plot_data=True):
 		sma = self.SMA(period=period, plot_data= False)
@@ -1562,7 +1582,7 @@ def __checkChange():
 	print(TMK.financial)
 
 def __technical_test():
-	ticker =  "SPOT"
+	ticker =  "KO"
 	TRL = stock(ticker)
 	#print (TRL.trade_history["Close"])
 
@@ -1570,7 +1590,7 @@ def __technical_test():
 	TRL.SMA(period=50)
 	TRL.EMA(period=22)
 	TRL.EMA(period=11)
-	#TRL.MACD()
+	TRL.MACD()
 
 	
 	
