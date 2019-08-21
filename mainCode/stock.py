@@ -527,7 +527,7 @@ class Fundamental_Analysis(object):
 		self.__missingStatementInformation(self.balance_stmts,"totalStockholderEquity")
 		#self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
 
-		self.trading["book value per share"] = self.balance_stmts["totalStockholderEquity"][0]/self.trading["Outstanding shares"]
+		self.trading["book value per share"] = float(self.balance_stmts["totalStockholderEquity"][0])/float(self.trading["Outstanding shares"])
 		
 		return self.trading["book value per share"]
 

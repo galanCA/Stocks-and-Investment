@@ -8,10 +8,10 @@ from email_msg import emailMessage
 # Email
 to_email = "galanc3.3@gmail.com"
 from_email = "galanc3.3@gmail.com"
-pwd_email = "Vivaldi3"
+pwd_email = ""
 title = "value stocks"
 
-def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=2,min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
+def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=0.75,min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
 	try:
 		TMK = stock(ticker)
 	except:
@@ -111,10 +111,13 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 	'''
 	10 Years of Profits will make sure the enterprise is a sound enterprise
 	'''
+	
 	try:
 		TMK.EPS()
 	except Exception as insta:
 		return False
+
+	'''
 	if all(i >= min_earnings_stability for i in TMK.financial["EPS"]):
 		print("\t[ Ok ] Earnings per share Stability")
 	else:
@@ -124,7 +127,9 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 		if eps < min_earnings_stability:
 			print("\t[Fail] Earnings per share Stability")
 			return False
-	'''
+
+	print("\t[ Ok ] Earnings per share Stability")
+	
 	
 
 	####################### Earnings growth and profitablity ######################
@@ -179,12 +184,12 @@ def valueStocks(ticker):
 	print ("Book value: %0.2f" %(TMK.trading["book value per share"][0]))
 	
 	print ("Price - book value: %0.2f " %(TMK.trading["price-book value"][0]))
-	print ("Sell at: %0.2f" % (TMK.trading["book value per share"][0]*2))
+	#print ("Sell at: %0.2f" % (TMK.trading["book value per share"][0]*2))
 
-	print ("Percent return: %0.2f%%" %(100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
+	print ("Percent return: %0.2f%%" %(100*(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
 
-	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.0f\nPrice-book value:\t%0.2f\nSell at:\t\t%0.2f\nPercent return:\t\t%0.2f%%\n\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0],TMK.trading["book value per share"][0]*2,100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
+	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPrice-book value:\t%0.2f\nSell at:\t\t%0.2f\nPercent return:\t\t%0.2f%%\n\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0],TMK.trading["book value per share"][0]*2,100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
 
 
 	###################### When to sell #############
@@ -194,17 +199,17 @@ def valueStocks(ticker):
 
 def main():
 	tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ['CNACU','ENTXW','OCCI','CMCT','CNXN']# 'GBDC','HNNA','HOFT','IMOS','LOAN','MERC','GSBC']#,'COG','GPRO','SNAP','SPOT','TSLA','AAPL',"KO"]
+		ticker_list = ['FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
 
 		passTestStock = []
 		for ticker in ticker_list:
 			print(ticker)	
-			worthy = defensive_investor_portafolio(ticker)
+			worthy = defensive_investor_portafolio(ticker,dividends_on=False)
 			print(ticker,": ", worthy,"\n")
 			if worthy:
 				passTestStock.append(ticker)
