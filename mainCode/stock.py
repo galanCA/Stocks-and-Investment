@@ -1447,10 +1447,18 @@ def getOtherTickerList():
 	ticker_list = []
 	index = []
 	for l in lines:
+		#print (l.split("|"))
 		ticker_list.append(l.split("|"))
 
-	ticker = pd.DataFrame(data=ticker_list[1:-1],
-							columns=ticker_list[0])
+	ticker_list = ticker_list[0:-2]
+
+
+	#print (ticker_list[0])
+
+	#print (ticker_list[1])
+	ticker = pd.DataFrame(columns=ticker_list[0],
+							data=ticker_list[1:])
+	return ticker
 
 def getSP500TickerList():
 	data = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')

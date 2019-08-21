@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../Functions and Libs/')
 
-from stock import stock, getNASDAQTickerList, getSP500TickerList
+from stock import stock, getNASDAQTickerList, getSP500TickerList, getOtherTickerList
 from decimal import *
 from email_msg import emailMessage
 
@@ -198,9 +198,11 @@ def valueStocks(ticker):
 	return msg
 
 def main():
-	tickerSwitcher = "NASDAQ"
-	tickerSwitcher = "ticker list"
+	tickerSwitcher = "Other"
+	#tickerSwitcher = "NASDAQ"
+	#tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
+
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
@@ -239,7 +241,6 @@ def main():
 		passTestStock = []
 		nasdaq_length = len(ticker_nasdaq)
 		print (nasdaq_length)
-		#random.shuffle(lst)
 		for index, ticker in ticker_nasdaq.iterrows():
 			if "N" in ticker["ETF"]: 
 				print("%s - %0.2f%%" % (ticker["Symbol"], float(index)/float(nasdaq_length)*100))
@@ -251,6 +252,24 @@ def main():
 				print("\n")
 				if worthy:
 					passTestStock.append(ticker["Symbol"])
+
+	elif tickerSwitcher is "Other":
+		print ("Other List")
+		ticker_other = getOtherTickerList()
+		passTestStock = []
+		other_length = len(ticker_other)
+
+		for index, ticker in ticker_other.iterrows():
+			if "N" in ticker["ETF"]:
+				print("%s - %0.2f%%" % (ticker["NASDAQ Symbol"], float(index)/float(other_length)*100))
+				try:
+					worthy = defensive_investor_portafolio(ticker["NASDAQ Symbol"], dividends_on=False)
+				except KeyError:
+					continue
+				print(ticker["NASDAQ Symbol"],": ", worthy)
+				print("\n")
+				if worthy:
+					passTestStock.append(ticker["NASDAQ Symbol"])
 
 	print("Stock to look into: ", passTestStock)
 
