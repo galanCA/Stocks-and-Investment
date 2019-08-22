@@ -5,12 +5,30 @@ from stock import stock, getNASDAQTickerList, getSP500TickerList, getOtherTicker
 from decimal import *
 from email_msg import emailMessage
 
-# Email
-to_email = "galanc3.3@gmail.com"
-from_email = "galanc3.3@gmail.com"
-pwd_email = ""
-title = "value stocks"
 
+
+def email_information(file):
+	f = open(file,"r")
+
+	for full_line in f:
+		line = full_line.split("\n")
+		if "to_email" in line[0]:
+			temp_to = line[0].split("=")
+			to_email = temp_to[1]
+
+		elif "from_email" in line[0]:
+			temp_from = line[0].split("=")
+			from_email = temp_from[1]
+
+		elif "pwd_email" in line[0]:
+			temp_pwd = line[0].split("=")
+			pwd_email = temp_pwd[1]
+
+		elif "title" in line[0]:
+			temp_title = line[0].split("=")
+			title = temp_title[1]
+
+	return to_email, from_email, pwd_email, title
 
 def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=0.75,min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
 	try:
@@ -166,7 +184,6 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 	############################# End ####################################
 	return True
 
-
 def valueStocks(ticker):
 	'''
 	Check When to buy when to sell. 
@@ -284,8 +301,9 @@ def main():
 	print("email content: ")
 	print(email_msg)
 
-	emailMessage(to_email, from_email, pwd_email, title, email_msg)
+	to_email, from_email, pwd_email, title = email_information('../email_passwd.txt')
 
+	emailMessage(to_email, from_email, pwd_email, title, email_msg)
 
 if __name__ == '__main__':
 	main()
