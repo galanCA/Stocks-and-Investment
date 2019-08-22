@@ -6,9 +6,9 @@ from decimal import *
 from email_msg import emailMessage
 
 # Email
-to_email =
-from_email =  
-pwd_email = 
+to_email = "galanc3.3@gmail.com"
+from_email = "galanc3.3@gmail.com"
+pwd_email = "Vivaldi3"
 title = "value stocks"
 
 def defensive_investor_portafolio(ticker):
