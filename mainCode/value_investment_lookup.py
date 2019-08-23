@@ -3,32 +3,10 @@ sys.path.append('../Functions and Libs/')
 
 from stock import stock, getNASDAQTickerList, getSP500TickerList, getOtherTickerList
 from decimal import *
-from email_msg import emailMessage
+from email_msg import emailMessage, email_information
 
-def email_information(file):
-	f = open(file,"r")
 
-	for full_line in f:
-		line = full_line.split("\n")
-		if "to_email" in line[0]:
-			temp_to = line[0].split("=")
-			to_email = temp_to[1]
-
-		elif "from_email" in line[0]:
-			temp_from = line[0].split("=")
-			from_email = temp_from[1]
-
-		elif "pwd_email" in line[0]:
-			temp_pwd = line[0].split("=")
-			pwd_email = temp_pwd[1]
-
-		elif "title" in line[0]:
-			temp_title = line[0].split("=")
-			title = temp_title[1]
-
-	return to_email, from_email, pwd_email, title
-
-def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=0.75,min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
+def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=1, min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
 	try:
 		TMK = stock(ticker)
 	except:
@@ -37,22 +15,6 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 	if (highprice <TMK.trade_history["Close"][-1]):
 		print ("\t [Fail] Price")
 		return False
-
-	######################## Total Debt vs Current Ratio ################
-	'''
-	Debt to current ratio secures low debt load to the company
-
-	try:
-		TMK.debtPerCurrentRatio('quarterly')
-	except Exception as insta:
-		return False
-
-	if TMK.financial["debt-current-ratio"][0] < 1.10:
-		print("\t[ Ok ] Debt to Current ratio")
-	else:
-		print("\t[Fail] Debt to Current ratio")
-		return False
-	'''
 
 	####################### Liabilities vs assets #################
 	'''
@@ -161,9 +123,7 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 	Curretly uses 12 for 
 
 	'''
-	
-	#print (TMK.financial["EPS"])
-	#print (TMK.financial["EPS"][0], TMK.financial["EPS"][2])
+
 	try:
 		eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
 		eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
@@ -177,8 +137,6 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 		print("\t[Fail] Earnings per share Growth")
 		return False
 
-	
-	
 	############################# End ####################################
 	return True
 
@@ -206,16 +164,15 @@ def valueStocks(ticker):
 	print ("Percent return: %0.2f%%" %(100*(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
 
-	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPrice-book value:\t%0.2f\nSell at:\t\t%0.2f\nPercent return:\t\t%0.2f%%\n\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0],TMK.trading["book value per share"][0]*2,100*(2*TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
+	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPrice-book value:\t%0.2f\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0])
 
-
-	###################### When to sell #############
-	#print (" ")
-	#print (msg)
 	return msg
 
 def main():
-	tickerSwitcher = "Other"
+	to_email, from_email, pwd_email, title = email_information('../email_passwd.init')
+
+	tickerSwitcher = "Full"
+	#tickerSwitcher = "Other"
 	#tickerSwitcher = "NASDAQ"
 	#tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
@@ -271,8 +228,8 @@ def main():
 
 	elif tickerSwitcher is "Other":
 		print ("Other List")
-		ticker_other = getOtherTickerList()
 		passTestStock = []
+		ticker_other = getOtherTickerList()
 		other_length = len(ticker_other)
 
 		for index, ticker in ticker_other.iterrows():
@@ -283,6 +240,39 @@ def main():
 				except KeyError:
 					continue
 				print(ticker["NASDAQ Symbol"],": ", worthy)
+				print("\n")
+				if worthy:
+					passTestStock.append(ticker["NASDAQ Symbol"])
+
+	elif tickerSwitcher is "Full":
+		print("Full")
+		passTestStock = []
+		ticker_nasdaq = getNASDAQTickerList()
+		ticker_other = getOtherTickerList()
+		nasdaq_length = len(ticker_nasdaq)
+		other_length = len(ticker_other)
+		print("total tickers", nasdaq_length+other_length)
+
+		for index, ticker in ticker_nasdaq.iterrows():
+			if "N" in ticker["ETF"]: 
+				print("%s - %0.3f%%" % (ticker["Symbol"], float(index)/float(nasdaq_length+other_length)*100))
+				try:
+					worthy = defensive_investor_portafolio(ticker["Symbol"],dividends_on=False)
+				except KeyError:
+					continue
+				print(ticker["Symbol"],": ", worthy)
+				print("\n")
+				if worthy:
+					passTestStock.append(ticker["Symbol"])
+
+		for index, ticker in ticker_other.iterrows():
+			if "N" in ticker["ETF"]:
+				print("%s - %0.3f%%" % (ticker["NASDAQ Symbol"], float(index+nasdaq_length)/float(nasdaq_length+other_length)*100))
+				try:
+					worthy = defensive_investor_portafolio(ticker["NASDAQ Symbol"], dividends_on=False)
+				except KeyError:
+					continue
+				print(ticker["Symbol"],": ", worthy)
 				print("\n")
 				if worthy:
 					passTestStock.append(ticker["NASDAQ Symbol"])
@@ -299,7 +289,7 @@ def main():
 	print("email content: ")
 	print(email_msg)
 
-	to_email, from_email, pwd_email, title = email_information('../email_passwd.init')
+	
 
 	emailMessage(to_email, from_email, pwd_email, title, email_msg)
 

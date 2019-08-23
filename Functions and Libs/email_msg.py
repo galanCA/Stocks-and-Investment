@@ -32,6 +32,29 @@ def emailMessage(to, gmailUsr, gmailPwd, subject, content):
 	smtpserver.sendmail(gmailUsr, [to], msg.as_string())
 	smtpserver.quit()
 
+def email_information(file):
+	f = open(file,"r")
+
+	for full_line in f:
+		line = full_line.split("\n")
+		if "to_email" in line[0]:
+			temp_to = line[0].split("=")
+			to_email = temp_to[1]
+
+		elif "from_email" in line[0]:
+			temp_from = line[0].split("=")
+			from_email = temp_from[1]
+
+		elif "pwd_email" in line[0]:
+			temp_pwd = line[0].split("=")
+			pwd_email = temp_pwd[1]
+
+		elif "title" in line[0]:
+			temp_title = line[0].split("=")
+			title = temp_title[1]
+
+	return to_email, from_email, pwd_email, title
+
 
 if __name__ == '__main__':
 	emailMessage("galanc3.3@gmail.com","galanc3.3@gmail.com","Vivaldi3","Test","This is a test\n to undertand how email work\t thank you")

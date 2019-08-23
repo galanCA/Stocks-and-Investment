@@ -1408,12 +1408,8 @@ def getNASDAQTickerList():
 
 	ftp.cwd("SymbolDirectory")
 
-	#ftp.retrbinary("RETR nasdaqlisted.txt",open("nasdaqlisted.txt",wb).write)
-
 	lines = []
 	ftp.retrlines("RETR nasdaqlisted.txt", lines.append)
-
-	#print (lines)
 
 	ftp.quit()
 
@@ -1447,15 +1443,10 @@ def getOtherTickerList():
 	ticker_list = []
 	index = []
 	for l in lines:
-		#print (l.split("|"))
 		ticker_list.append(l.split("|"))
 
 	ticker_list = ticker_list[0:-2]
 
-
-	#print (ticker_list[0])
-
-	#print (ticker_list[1])
 	ticker = pd.DataFrame(columns=ticker_list[0],
 							data=ticker_list[1:])
 	return ticker
@@ -1605,7 +1596,6 @@ def __technical_test():
 	#print("plot", TRL.candle_data)
 	#print("SMA", TRL.techplot)
 	plt.show()
-
 
 if __name__=="__main__":
 	#__parent_classes()
