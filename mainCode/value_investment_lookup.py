@@ -6,7 +6,14 @@ from decimal import *
 from email_msg import emailMessage, email_information
 
 
-def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, min_price_earnings=22.5, max_price_book_value=1, min_total_revenue = 500000, dividends_on = True, min_earnings_stability=0, min_earnings_growth=6):
+def defensive_investor_portafolio(ticker, highprice=10000, 
+									max_current_ratio=2, 
+									min_price_earnings=22.5, 
+									max_price_book_value=1, 
+									min_total_revenue = 500000, 
+									dividends_on = True, 
+									min_earnings_stability=0, 
+									min_earnings_growth=6):
 	try:
 		TMK = stock(ticker)
 	except:
@@ -37,9 +44,9 @@ def defensive_investor_portafolio(ticker, highprice=10000, max_current_ratio=2, 
 	'''
 	try:
 		TMK.trailingPE()
-
 	except Exception as insta:
 		return False
+		
 	if TMK.trading["price-earnings"][0] < min_price_earnings:
 		print("\t[ Ok ] Price earnings")
 	else:
@@ -253,7 +260,7 @@ def main():
 		other_length = len(ticker_other)
 		print("total tickers", nasdaq_length+other_length)
 
-		for index, ticker in ticker_nasdaq.iterrows():
+		for index, ticker in ticker_nasdaq[0:1].iterrows():
 			if "N" in ticker["ETF"]: 
 				print("%s - %0.3f%%" % (ticker["Symbol"], float(index)/float(nasdaq_length+other_length)*100))
 				try:
@@ -272,7 +279,8 @@ def main():
 					worthy = defensive_investor_portafolio(ticker["NASDAQ Symbol"], dividends_on=False)
 				except KeyError:
 					continue
-				print(ticker["Symbol"],": ", worthy)
+				
+				print(ticker["NASDAQ Symbol"],": ", worthy)
 				print("\n")
 				if worthy:
 					passTestStock.append(ticker["NASDAQ Symbol"])
@@ -288,8 +296,6 @@ def main():
 
 	print("email content: ")
 	print(email_msg)
-
-	
 
 	emailMessage(to_email, from_email, pwd_email, title, email_msg)
 
