@@ -260,7 +260,7 @@ def main():
 		other_length = len(ticker_other)
 		print("total tickers", nasdaq_length+other_length)
 
-		for index, ticker in ticker_nasdaq[0:1].iterrows():
+		for index, ticker in ticker_nasdaq.iterrows():
 			if "N" in ticker["ETF"]: 
 				print("%s - %0.3f%%" % (ticker["Symbol"], float(index)/float(nasdaq_length+other_length)*100))
 				try:

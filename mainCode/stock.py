@@ -895,7 +895,7 @@ class Technical_Analysis(object):
 		sma = []
 		for i in range(period,len(self.trade_history[price])):
 			# take the average of i-period to i-1 (the minus 1 acounts for the start of 0)
-			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i-1])/period
+			temp = reduce(lambda x, y: x+y, self.trade_history[price][i-period:i-1])/float(period)
 
 			sma.append(temp)
 
@@ -909,12 +909,10 @@ class Technical_Analysis(object):
 	def EMA(self, price="Close", period=20, plot_data = True):
 		sma = self.SMA(price=price, period=period, plot_data=False)
 		K = (2/(float(period)+1))
-		#print (K)
 		ema = []
 		ema.append((self.trade_history[price][period]*K)+(sma[0]*(1-K)))
 
 		for i in range(period+1, len(self.trade_history[price])):
-			#print(self.trade_history[price][i]*K,ema[-1]*(1-K))
 			ema.append( (self.trade_history[price][i]*K) + ema[-1]*(1-K) )
 
 		if plot_data:
@@ -924,10 +922,37 @@ class Technical_Analysis(object):
 
 		return ema
 
-	def MACD(self, price="Close",fast_ema=12,slow_ema=26, signal=9):
+	def MACD(self, price="Close",fast_ema=12,slow_ema=26, signal=9,plot_data=True):
 		emaf = self.EMA(period=fast_ema, plot_data = False)
 		emas = self.EMA(period=slow_ema, plot_data = False)
-		MACD = np.array(emaf[slow_ema-fast_ema-1:-1]) - np.array(emas)
+		MACD_line = np.array(emaf[slow_ema-fast_ema-1:-1]) - np.array(emas)
+
+		MACD_signal = []
+		K = (2/(float(signal)+1))
+
+		sma = reduce(lambda x,y:x+y,MACD_line[0:signal-1])/float(signal)
+
+		MACD_signal.append( (MACD_line[signal]*K) + (sma*(1-K)) )
+
+		for i in range (signal+1, len(MACD_line)):
+			MACD_signal.append(  (MACD_line[i]*K) + (MACD_signal[-1]*(1-K))  )
+
+		MACD_histogram = MACD_line[signal-1:-1] - MACD_signal
+
+		print (MACD_histogram)
+
+		if plot_data:
+			figs, MACD_data = plt.subplots()
+			MACD_data.plot(self.trade_history.index[len(self.trade_history.index)-len(MACD_line)-1:-1],MACD_line)
+			MACD_data.plot(self.trade_history.index[len(self.trade_history.index)-len(MACD_line)-1+signal:-1],MACD_signal)
+
+			mask1 = MACD_histogram < 0
+			mask2 = MACD_histogram >= 0
+			tempx = self.trade_history.index[len(self.trade_history.index)-len(MACD_line)-1+signal:-1]
+
+			MACD_data.bar(tempx[mask1], MACD_histogram[mask1], color='red')
+			MACD_data.bar(tempx[mask2], MACD_histogram[mask2], color='green')
+
 
 	'''
 	### Oscillators ###
@@ -1516,14 +1541,14 @@ def __fundamental_test():
 	# Finances 
 
 	# Trading
-	print ( "TTM EPS: ", TRL.trailingEPS())
-	print ("TTM PE: ", TRL.trailingPE())
-	print(TRL.bookValuePerShare())
-	print(TRL.grahamNumber())
-	print(TRL.priceGraham())
-	print(TRL.pricePerBookValue())
+	#print ( "TTM EPS: ", TRL.trailingEPS())
+	#print ("TTM PE: ", TRL.trailingPE())
+	#print(TRL.bookValuePerShare())
+	#print(TRL.grahamNumber())
+	#print(TRL.priceGraham())
+	#print(TRL.pricePerBookValue())
 
-	print (TRL.trading)
+	#print (TRL.trading)
 	
 	#print (TRL.cash('quarterly'))
 	#print(TRL.outstandingShares())
@@ -1585,10 +1610,10 @@ def __technical_test():
 	TRL = stock(ticker)
 	#print (TRL.trade_history["Close"])
 
-	TRL.plot()
-	TRL.SMA(period=50)
-	TRL.EMA(period=22)
-	TRL.EMA(period=11)
+	#TRL.plot()
+	#TRL.SMA(period=50)
+	#TRL.EMA(period=22)
+	#TRL.EMA(period=11)
 	TRL.MACD()
 
 	
