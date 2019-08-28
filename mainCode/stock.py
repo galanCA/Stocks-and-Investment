@@ -953,6 +953,8 @@ class Technical_Analysis(object):
 			MACD_data.bar(tempx[mask1], MACD_histogram[mask1], color='red')
 			MACD_data.bar(tempx[mask2], MACD_histogram[mask2], color='green')
 
+		return [MACD_line, MACD_signal, MACD_histogram]
+
 
 	'''
 	### Oscillators ###
@@ -1099,6 +1101,116 @@ class Technical_Analysis(object):
 
 		plt.draw()
 
+	def Impulse_System(self):
+		'''
+		'''
+		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
+		alldays    = DayLocator()              # minor ticks on the days
+		minute = MinuteLocator()
+		weekFormatter = DateFormatter('%b %d') #('%b %d %H:%M:%S')  # e.g., Jan 12
+		dayFormatter = DateFormatter('%d')      # e.g., 12
+		fig, self.candle_data = plt.subplots()
+		self.ax2 = self.candle_data.twinx()
+		
+		fig.subplots_adjust(bottom=0.2)
+		#ax.xaxis.set_major_locator(mondays)
+		#ax.xaxis.set_minor_locator(alldays)
+		self.candle_data.xaxis.set_major_formatter(weekFormatter)
+		self._impulse_candlestick(self.candle_data,
+					self.trade_history.index,
+					self.trade_history["Open"],
+					self.trade_history["Close"],
+					self.trade_history["High"],
+					self.trade_history["Low"],
+					width=0.0006, colorup="g", colordown="r")
+
+		self.candle_data.xaxis_date()
+		self.candle_data.autoscale_view()
+		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+		plt.grid(True)
+
+		plt.draw()
+
+	def _impulse_candlestick(self,ax, date,open,close,high,low, width=0.2, colorup='k', colordown='r',
+		alpha=1.0, ochl=True):
+		"""
+		Plot the time, open, high, low, close as a vertical line ranging
+		from low to high.  Use a rectangular bar to represent the
+		open-close span.  If close >= open, use colorup to color the bar,
+		otherwise use colordown
+
+		Parameters
+		----------
+		ax : `Axes`
+			an Axes instance to plot to
+		quotes : sequence of quote sequences
+			data to plot.  time must be in float date format - see date2num
+			(time, open, high, low, close, ...) vs
+			(time, open, close, high, low, ...)
+			set by `ochl`
+		width : float
+			fraction of a day for the rectangle width
+		colorup : color
+			the color of the rectangle where close >= open
+		colordown : color
+			the color of the rectangle where close <  open
+		alpha : float
+			the rectangle alpha level
+		ochl: bool
+			argument to select between ochl and ohlc ordering of quotes
+
+		Returns
+		-------
+		ret : tuple
+			returns (lines, patches) where lines is a list of lines
+			added and patches is a list of the rectangle patches added
+
+		"""
+
+		OFFSET = width / 2.0
+
+		lines = []
+		patches = []
+		l = len(date)
+		for i in range(0,l):
+			#if ochl:
+			#	t, open, close, high, low = q[:5]
+			#else:
+			#	t, open, high, low, close = q[:5]
+			dateNum = date2num(date[i])
+			if close[i] >= open[i]:
+				color = colorup
+				lower = open[i]
+				height = close[i] - open[i]
+			else:
+				color = colordown
+				lower = close[i]
+				height = open[i] - close[i]
+
+			vline = Line2D(
+				xdata=(dateNum, dateNum), ydata=(low[i], high[i]),
+				color=color,
+				linewidth=0.5,
+				antialiased=True,
+				)
+
+			rect = Rectangle(
+				xy=(dateNum - OFFSET, lower),
+				width=width,
+				height=height,
+				facecolor='b',
+				edgecolor=color,
+			)
+
+			rect.set_alpha(alpha)
+			lines.append(vline)
+			patches.append(rect)
+			ax.add_line(vline)
+			ax.add_patch(rect)
+		ax.autoscale_view()
+
+		return lines, patches
+
 	def _candlestick(self,ax, date,open,close,high,low, width=0.2, colorup='k', colordown='r',
 		alpha=1.0, ochl=True):
 		"""
@@ -1169,8 +1281,8 @@ class Technical_Analysis(object):
 				facecolor=color,
 				edgecolor=color,
 			)
-			rect.set_alpha(alpha)
 
+			rect.set_alpha(alpha)
 			lines.append(vline)
 			patches.append(rect)
 			ax.add_line(vline)
@@ -1611,10 +1723,11 @@ def __technical_test():
 	#print (TRL.trade_history["Close"])
 
 	#TRL.plot()
+	TRL.Impulse_System()
 	#TRL.SMA(period=50)
 	#TRL.EMA(period=22)
 	#TRL.EMA(period=11)
-	TRL.MACD()
+	#TRL.MACD()
 
 	
 	

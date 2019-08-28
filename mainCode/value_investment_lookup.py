@@ -58,7 +58,7 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 		TMK.pricePerBookValue()
 	except Exception as insta:
 		return False
-	if TMK.trading["price-book value"][0] < max_price_book_value:
+	if TMK.trading["price-book value"][0] < max_price_book_value and TMK.trading["price-book value"][0] >= 0:
 		print("\t[ Ok ] Price book value")
 	else:
 		print("\t[Fail] Price book value")
