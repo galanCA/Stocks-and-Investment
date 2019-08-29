@@ -939,8 +939,6 @@ class Technical_Analysis(object):
 
 		MACD_histogram = MACD_line[signal-1:-1] - MACD_signal
 
-		print (MACD_histogram)
-
 		if plot_data:
 			figs, MACD_data = plt.subplots()
 			MACD_data.plot(self.trade_history.index[len(self.trade_history.index)-len(MACD_line)-1:-1],MACD_line)
@@ -1101,9 +1099,15 @@ class Technical_Analysis(object):
 
 		plt.draw()
 
-	def Impulse_System(self):
+	def Impulse_System(self, ema = 13, fast_ema = 12, slow_ema=26,signal=9 ):
 		'''
 		'''
+		# get ema and MACD data
+		# Do it as pandas
+		ema_data = self.EMA(period=ema,plot_data=False)
+		MACD_data = self.MACD(fast_ema=fast_ema,slow_ema=slow_ema, signal=signal,plot_data=False) 
+
+
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
 		alldays    = DayLocator()              # minor ticks on the days
 		minute = MinuteLocator()
@@ -1122,7 +1126,7 @@ class Technical_Analysis(object):
 					self.trade_history["Close"],
 					self.trade_history["High"],
 					self.trade_history["Low"],
-					width=0.0006, colorup="g", colordown="r")
+					width=0.9, colorup="g", colordown="r")
 
 		self.candle_data.xaxis_date()
 		self.candle_data.autoscale_view()
@@ -1131,8 +1135,8 @@ class Technical_Analysis(object):
 
 		plt.draw()
 
-	def _impulse_candlestick(self,ax, date,open,close,high,low, width=0.2, colorup='k', colordown='r',
-		alpha=1.0, ochl=True):
+	def _impulse_candlestick(self,ax, date,open,close,high,low, ema, macd, width=0.9, longcolor='k', shortcolor='r',
+		neutralcolor='b'):
 		"""
 		Plot the time, open, high, low, close as a vertical line ranging
 		from low to high.  Use a rectangular bar to represent the
@@ -1173,17 +1177,13 @@ class Technical_Analysis(object):
 		patches = []
 		l = len(date)
 		for i in range(0,l):
-			#if ochl:
-			#	t, open, close, high, low = q[:5]
-			#else:
-			#	t, open, high, low, close = q[:5]
 			dateNum = date2num(date[i])
 			if close[i] >= open[i]:
-				color = colorup
+				color = longcolor
 				lower = open[i]
 				height = close[i] - open[i]
 			else:
-				color = colordown
+				color = shortcolor
 				lower = close[i]
 				height = open[i] - close[i]
 
@@ -1194,6 +1194,21 @@ class Technical_Analysis(object):
 				antialiased=True,
 				)
 
+			oline = Line2D(
+				xdata=(dateNum - OFFSET, dateNum), ydata=(open[i], open[i]),
+				color=color,
+				linewidth=0.5,
+				antialiased=True,
+				)
+
+			cline = Line2D(
+				xdata=(dateNum , dateNum + OFFSET), ydata=(close[i], close[i]),
+				color=color,
+				linewidth=0.5,
+				antialiased=True,
+				)
+
+			'''
 			rect = Rectangle(
 				xy=(dateNum - OFFSET, lower),
 				width=width,
@@ -1201,12 +1216,15 @@ class Technical_Analysis(object):
 				facecolor='b',
 				edgecolor=color,
 			)
+			'''
 
-			rect.set_alpha(alpha)
+			#rect.set_alpha(alpha)
 			lines.append(vline)
-			patches.append(rect)
+			#patches.append(rect)
 			ax.add_line(vline)
-			ax.add_patch(rect)
+			ax.add_line(oline)
+			ax.add_line(cline)
+			#ax.add_patch(rect)
 		ax.autoscale_view()
 
 		return lines, patches
@@ -1719,7 +1737,7 @@ def __checkChange():
 
 def __technical_test():
 	ticker =  "KO"
-	TRL = stock(ticker)
+	TRL = stock(ticker,period=200)
 	#print (TRL.trade_history["Close"])
 
 	#TRL.plot()
