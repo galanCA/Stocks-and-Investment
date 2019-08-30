@@ -1105,7 +1105,7 @@ class Technical_Analysis(object):
 		# get ema and MACD data
 		# Do it as pandas
 		ema_data = self.EMA(period=ema,plot_data=False)
-		MACD_data = self.MACD(fast_ema=fast_ema,slow_ema=slow_ema, signal=signal,plot_data=False) 
+		MACD_data = self.MACD(fast_ema=fast_ema,slow_ema=slow_ema, signal=signal,plot_data=True) 
 
 
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
@@ -1126,7 +1126,9 @@ class Technical_Analysis(object):
 					self.trade_history["Close"],
 					self.trade_history["High"],
 					self.trade_history["Low"],
-					width=0.9, colorup="g", colordown="r")
+					ema_data, 
+					MACD_data,
+					width=0.9, longcolor="g", shortcolor="r")
 
 		self.candle_data.xaxis_date()
 		self.candle_data.autoscale_view()
@@ -1135,7 +1137,7 @@ class Technical_Analysis(object):
 
 		plt.draw()
 
-	def _impulse_candlestick(self,ax, date,open,close,high,low, ema, macd, width=0.9, longcolor='k', shortcolor='r',
+	def _impulse_candlestick(self,ax, date,open,close,high,low, ema, fmacd, width=0.9, longcolor='g', shortcolor='r',
 		neutralcolor='b'):
 		"""
 		Plot the time, open, high, low, close as a vertical line ranging
@@ -1171,13 +1173,46 @@ class Technical_Analysis(object):
 
 		"""
 
+		macd = fmacd[2]
+
 		OFFSET = width / 2.0
 
 		lines = []
 		patches = []
 		l = len(date)
+		lema =  len(ema)
+		lmacd = len(macd)
+		ema_offset = l-lema
+		macd_offset = l - lmacd
+
+		ISstart = l -  min(lema,lmacd) 
+
 		for i in range(0,l):
 			dateNum = date2num(date[i])
+			if i > ISstart:
+				iema = i - ema_offset	
+				imacd = i - macd_offset
+
+				# get derivative of ema
+				d_ema = ema[iema]-ema[iema - 1] >= 0
+
+				# get derivative of macd
+				d_macd = macd[imacd] - macd[imacd - 1] >= 0
+
+				if d_ema and d_macd:
+					print (d_ema, d_macd, "Long")
+					color = longcolor
+				elif not d_ema and not d_macd:
+					print (d_ema, d_macd, "Short")
+					color = shortcolor
+				elif not d_ema and d_macd or d_ema and not d_macd:
+					print (d_ema, d_macd, "Neutral")
+					color = neutralcolor
+			else:
+				# neutral
+				color = neutralcolor
+
+			'''
 			if close[i] >= open[i]:
 				color = longcolor
 				lower = open[i]
@@ -1186,6 +1221,7 @@ class Technical_Analysis(object):
 				color = shortcolor
 				lower = close[i]
 				height = open[i] - close[i]
+			'''
 
 			vline = Line2D(
 				xdata=(dateNum, dateNum), ydata=(low[i], high[i]),
@@ -1736,8 +1772,8 @@ def __checkChange():
 	print(TMK.financial)
 
 def __technical_test():
-	ticker =  "KO"
-	TRL = stock(ticker,period=200)
+	ticker =  "TSLA"
+	TRL = stock(ticker,period=400)
 	#print (TRL.trade_history["Close"])
 
 	#TRL.plot()
