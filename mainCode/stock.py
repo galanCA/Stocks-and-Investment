@@ -1200,17 +1200,17 @@ class Technical_Analysis(object):
 				d_macd = macd[imacd] - macd[imacd - 1] >= 0
 
 				if d_ema and d_macd:
-					print (d_ema, d_macd, "Long")
+					#print (d_ema, d_macd, "Long")
 					color = longcolor
 				elif not d_ema and not d_macd:
-					print (d_ema, d_macd, "Short")
+					#print (d_ema, d_macd, "Short")
 					color = shortcolor
 				elif not d_ema and d_macd or d_ema and not d_macd:
-					print (d_ema, d_macd, "Neutral")
+					#print (d_ema, d_macd, "Neutral")
 					color = neutralcolor
 			else:
 				# neutral
-				color = neutralcolor
+				color = shortcolor#neutralcolor
 
 			'''
 			if close[i] >= open[i]:

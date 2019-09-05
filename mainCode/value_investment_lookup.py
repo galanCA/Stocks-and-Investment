@@ -171,7 +171,7 @@ def valueStocks(ticker):
 	print ("Percent return: %0.2f%%" %(100*(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
 
-	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPrice-book value:\t%0.2f\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0],TMK.trading["price-book value"][0])
+	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPercentage to BV:\t%0.2f\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0], float(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
 
 	return msg
 
