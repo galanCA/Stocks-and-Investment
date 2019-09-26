@@ -1,19 +1,21 @@
 import sys
 sys.path.append('../Functions and Libs/')
+sys.path.append('../../Py2GoogleDrive/mainCode')
 
 from stock import stock, getNASDAQTickerList, getSP500TickerList, getOtherTickerList
 from decimal import *
 from email_msg import emailMessage, email_information
+from google_sheet_class import Gsheet
 
 
 def defensive_investor_portafolio(ticker, highprice=10000, 
-									max_current_ratio=2, 
-									min_price_earnings=22.5, 
-									max_price_book_value=1, 
-									min_total_revenue = 500000, 
-									dividends_on = True, 
-									min_earnings_stability=0, 
-									min_earnings_growth=6):
+	max_current_ratio=2, 
+	min_price_earnings=26.5,#22.5 
+	max_price_book_value=1, 
+	min_total_revenue = 500000, 
+	dividends_on = True, 
+	min_earnings_stability=0, 
+	min_earnings_growth=6):
 	try:
 		TMK = stock(ticker)
 	except:
@@ -147,13 +149,12 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	############################# End ####################################
 	return True
 
-def valueStocks(ticker):
+def valueStocks(ticker, sheetClass, cellnumber):
 	'''
 	Check When to buy when to sell. 
 		Find the risk-rewards
 		Check how managment is doing
 	'''
-
 	TMK = stock(ticker)	
 
 
@@ -171,12 +172,18 @@ def valueStocks(ticker):
 	print ("Percent return: %0.2f%%" %(100*(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1]) )
 
 
-	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPercentage to BV:\t%0.2f\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0], float(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
+	msg = "%s: \nCurrent Price:\t\t%0.2f\nBook value:\t\t%0.2f\nPercentage to BV:\t%0.2f\n\n"%(ticker, TMK.trade_history["Close"][-1], TMK.trading["book value per share"][0], float(TMK.trading["book value per share"][0]-TMK.trade_history["Close"][-1])/TMK.trade_history["Close"][-1])
+
+	sheetClass.append(range_name="Example!A" + str(cellnumber), item=str(ticker))
+	sheetClass.append(range_name="Example!C" + str(cellnumber), item="%0.2f" %TMK.trading["book value per share"][0])
+	sheetClass.append(range_name="Example!H" + str(cellnumber), item="%0.2f" %TMK.trade_history["Close"][-1])
 
 	return msg
 
 def main():
-	to_email, from_email, pwd_email, title = email_information('../email_passwd.init')
+	to_email, from_email, pwd_email, title, sheet_link = email_information('../email_passwd.init')
+
+	watchlist = Gsheet(sheet_link)
 
 	tickerSwitcher = "Full"
 	#tickerSwitcher = "Other"
@@ -289,10 +296,12 @@ def main():
 
 	print("Stock that pass the test")
 	email_msg = ""
+	cellnumber = 2
 	for ticker in passTestStock:
 		print (ticker)
-		email_msg = email_msg + valueStocks(ticker)
+		email_msg = email_msg + valueStocks(ticker,watchlist, cellnumber)
 		print(" ")
+		cellnumber = cellnumber + 1
 
 	print("email content: ")
 	print(email_msg)
@@ -301,3 +310,6 @@ def main():
 
 if __name__ == '__main__':
 	main()
+	#testSheet()
+
+

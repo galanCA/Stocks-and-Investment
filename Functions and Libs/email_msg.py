@@ -53,7 +53,11 @@ def email_information(file):
 			temp_title = line[0].split("=")
 			title = temp_title[1]
 
-	return to_email, from_email, pwd_email, title
+		elif "sheet" in line[0]:
+			temp_sheet = line[0].split("=")
+			sheet = temp_sheet[1]
+
+	return to_email, from_email, pwd_email, title, sheet
 
 
 if __name__ == '__main__':
