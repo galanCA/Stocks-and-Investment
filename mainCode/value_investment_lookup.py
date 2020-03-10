@@ -19,19 +19,23 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	try:
 		TMK = stock(ticker)
 	except:
+		print("Error with ticker")
 		return False
 
-	if (highprice <TMK.trade_history["Close"][-1]):
-		print ("\t [Fail] Price")
+	if (highprice < TMK.trade_history["Close"][-1]):
+		print ("\t[Fail] Price")
 		return False
+	else:
+		print ("\t[ Ok ] Price")
 
 	####################### Liabilities vs assets #################
 	'''
 	Current Liabilities or the ratio between assets over liabilities be greater than 2
 	'''
 	try:
-		TMK.currentRatio('quarterly')
+		print(TMK.currentRatio('quarterly'))
 	except Exception as insta:
+		print("Error: Current Ratio")
 		return False
 
 	if TMK.financial["current-ratio"][0] > max_current_ratio:
@@ -44,9 +48,11 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 	Price to Earnings is su
 	'''
+	
 	try:
 		TMK.trailingPE()
 	except Exception as insta:
+		print("Error: Trailing PE")
 		return False
 		
 	if TMK.trading["price-earnings"][0] < min_price_earnings:
@@ -56,6 +62,7 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 		return False
 
 	########################## Price to assets ########################
+	print("book value")
 	try:
 		TMK.pricePerBookValue()
 	except Exception as insta:
@@ -185,15 +192,15 @@ def main():
 
 	watchlist = Gsheet(sheet_link)
 
-	tickerSwitcher = "Full"
+	#tickerSwitcher = "Full"
 	#tickerSwitcher = "Other"
 	#tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ['FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
+		ticker_list = ['YY']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
 
 		passTestStock = []
 		for ticker in ticker_list:

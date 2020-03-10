@@ -108,6 +108,7 @@ class Fundamental_Analysis(object):
 	def balance(self, timeline='annual'):
 		self.__timelineCheck(timeline)
 		self.balance_stmts = self.__statements(timeline, 'balance')
+
 		if self.balance_stmts.empty:
 			return None
 
@@ -322,16 +323,24 @@ class Fundamental_Analysis(object):
 	def currentRatio(self,timeline='annual'):
 		'''
 		'''
+		print("shit")
 		self.__timelineCheck(timeline)
+		print("Lol")
 		self.__createFinancialMetrics()
+		print ("end")
 		self.__createBalanceMetrics(timeline)
+		print(" fuck")
 		self.__checkpdIndex(self.financial, self.balance_stmts.index)
+		print("pass")
 
 		current_ratio = []
 		for assets, liabilities in zip(self.balance_stmts["totalCurrentAssets"],self.balance_stmts["totalCurrentLiabilities"]):
+			print(assets,liabilities )
 			current_ratio.append(float(assets)/float(liabilities))
 
 		self.financial["current-ratio"] = current_ratio
+
+
 
 		return self.financial["current-ratio"]
 
@@ -651,8 +660,11 @@ class Fundamental_Analysis(object):
 			self.__checkpdIndex(self.trading,[datetime.date.today()])
 
 	def __statements(self, timeline, type_stmts):
+		
 		if "annual" in timeline or "quarterly" in timeline:
+			print (type_stmts)
 			raw = self.fundamentals.get_financial_stmts(timeline, type_stmts)
+			print(raw)
 			stmts = self.__raw2pd(raw[list(raw.keys())[0]])
 			return stmts
 
