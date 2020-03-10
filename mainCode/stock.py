@@ -105,11 +105,16 @@ class Fundamental_Analysis(object):
 		'''
 		self.fundamentals = YahooFinancials(ticker)
 
+	def profile(self):
+		self.company_profile = self.__profile()
+
+		return self.company_profile
+
 	def balance(self, timeline='annual'):
 		self.__timelineCheck(timeline)
 		self.balance_stmts = self.__statements(timeline, 'balance')
 
-		if self.balance_stmts.empty:
+		if len(self.balance_stmts) == 0:
 			return None
 
 		return self.balance_stmts
@@ -117,11 +122,19 @@ class Fundamental_Analysis(object):
 	def income(self, timeline='annual'):
 		self.__timelineCheck(timeline)
 		self.income_stmts = self.__statements(timeline, 'income')
+		
+		if len(self.income_stmts) == 0 :
+			return None
+		
 		return self.income_stmts
 
 	def cash(self, timeline='annual'):
 		self.__timelineCheck(timeline)
 		self.cash_stmts = self.__statements(timeline, 'cash')
+		
+		if len(self.cash_stmts) == 0:
+			return None
+
 		return self.cash_stmts
 
 	def earnings(self):
@@ -170,8 +183,9 @@ class Fundamental_Analysis(object):
 		'''
 		# Check if data has being loaded
 		self.__createValuationMetrics()
-		self.__createMarketCap()
+		#self.__createMarketCap()
 		self.__createBalanceMetrics(timeline)
+		self.__createProfile()
 		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
 
 		# check if statemnts values exists
@@ -182,7 +196,7 @@ class Fundamental_Analysis(object):
 		EV = []
 		for shortDebt, longDebt, cash_equivalents in zip(self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
 			total_debt = shortDebt + longDebt
-			EV.append(self.market_cap + total_debt - cash_equivalents)
+			EV.append(self.company_profile["mkCap"] + total_debt - cash_equivalents)
 
 		self.valuations["EV"] = EV
 		return self.valuations["EV"]
@@ -609,6 +623,12 @@ class Fundamental_Analysis(object):
 		except AttributeError:
 			self.outstandingShares()
 
+	def __createProfile(self):
+		try:
+			self.company_profile
+		except AttributeError:
+			self.profile()
+
 	def __createMarketCap(self):
 		raise Exception("Depricated")
 		try:
@@ -662,14 +682,40 @@ class Fundamental_Analysis(object):
 	def __statements(self, timeline, type_stmts):
 		
 		if "annual" in timeline or "quarterly" in timeline:
-			print (type_stmts)
+			url = 'https://financialmodelingprep.com/api/v3/financials/'
+			if type_stmts in 'balance':
+				url = url + '/income-statement/'+ self.ticker
+				
+			elif type_stmts in 'income':
+				url = url + '/balance-sheet-statement/'+ self.ticker
+			
+			elif type_stmts in 'cash':
+				url = url + '/cash-flow-statement/'+ self.ticker
+
+			if timeline in 'quarterly':
+				url = url + '?period=quarter'
+
+
+			temp_stmts = self.__webData(url)
+			stmts = temp_stmts['financials']
+
+			'''
 			raw = self.fundamentals.get_financial_stmts(timeline, type_stmts)
 			print(raw)
 			stmts = self.__raw2pd(raw[list(raw.keys())[0]])
+			'''
 			return stmts
 
 		else:
 			print("The timeline is not define correctly")
+			return None
+
+	def __profile(self):
+		url = 'https://financialmodelingprep.com/api/v3/company/profile/' + self.ticker
+		webRaw = self.__webData(url)
+		company_profile =  webRaw['profile']
+		return company_profile 
+
 
 	def __raw2pd(self,raw_data):
 		# Get all the list dont repeat
@@ -784,6 +830,12 @@ class Fundamental_Analysis(object):
 
 		else:
 			return self.__statements('quarterly','income')
+
+	def __webData(self, url):
+		web = requests.get(url)
+		raw = web.json()
+		return raw
+
 
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
@@ -1706,14 +1758,22 @@ def __other_test():
 
 def __fundamental_test():
 	# Set up
-	ticker =  "SNA"
+	ticker =  "KO"
 	TRL = stock(ticker)
 
-	#print (TRL.balance())
-	#print (TRL.income())
-	#print (TRL.cash())
+	print (TRL.balance())
+	print (TRL.income())
+	print (TRL.cash())
 
 	# Valuations
+	print ( "EV per Revenue: ", TRL.EVperRevenue())
+	print ( "enterprise value: ", TRL.enterpriseValue())
+	#print ( "TTM EPS: ", TRL.fowardPE()) # To bedevelop
+	print ( "book Value: ", TRL.bookValue())
+	#print ( "TTM EPS: ", TRL.PEG()) # to be developt
+	print ( "price Sales Ratio: ", TRL.priceSalesRatio())
+	print ( "TTM EPS: ", TRL.priceBookValue()) 
+	#print ( "TTM EPS: ", TRL.enterpriseEBITDA()) # To be developt
 	
 	
 	# Finances 
@@ -1804,9 +1864,9 @@ def __technical_test():
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
-	#__fundamental_test()
+	__fundamental_test()
 	#__time_lookup_day_values()
 	#__testTickerlist()
 	#__dividendsExtract()
 	#__checkChange()
-	__technical_test()
+	#__technical_test()

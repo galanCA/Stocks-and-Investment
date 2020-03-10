@@ -200,7 +200,7 @@ def main():
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ['YY']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
+		ticker_list = ['KO']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
 
 		passTestStock = []
 		for ticker in ticker_list:
@@ -313,7 +313,7 @@ def main():
 	print("email content: ")
 	print(email_msg)
 
-	emailMessage(to_email, from_email, pwd_email, title, email_msg)
+	#emailMessage(to_email, from_email, pwd_email, title, email_msg)
 
 if __name__ == '__main__':
 	main()
