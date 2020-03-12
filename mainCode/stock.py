@@ -758,6 +758,7 @@ class Fundamental_Analysis(object):
 		'''
 		This is used to check if the information exist already in the pandas data frame
 		'''
+		print( )
 		try:
 			statement[colmn]
 			return True
