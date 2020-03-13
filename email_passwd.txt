@@ -1,0 +1,4 @@
+to_email=galanc3.3@gmail.com
+from_email=galanc3.3@gmail.com
+pwd_email=Vivaldi3
+title=value stocks

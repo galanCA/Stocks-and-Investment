@@ -76,6 +76,7 @@ import time
 import itertools
 import numpy
 
+
 from functools			import reduce
 from ftplib 			import FTP
 from lxml 				import html 
@@ -84,17 +85,22 @@ from collections 		import OrderedDict
 from time 				import sleep
 from yahoofinancials 	import YahooFinancials
 from math 				import sqrt, isnan
+from pylab 				import *
+from matplotlib.dates 	import  DateFormatter, WeekdayLocator, HourLocator, \
+     							DayLocator, MONDAY, SecondLocator
 
 # Libraries with different names
-import pandas as pd
-import pandas_datareader.data as web
-import matplotlib.pyplot as plt
-pd.set_option('mode.chained_assignment', None)
+import pandas 					as pd
+import pandas_datareader.data 	as web
+import matplotlib.pyplot 		as plt
+import decimal 					as dRep
 
+
+pd.set_option('mode.chained_assignment', None)
+#print(dRep.getcontext())
 # plot
-from pylab import *
-from matplotlib.dates import  DateFormatter, WeekdayLocator, HourLocator, \
-     DayLocator, MONDAY, SecondLocator
+
+
 # from matplotlib.finance
 #from mpl_finance import candlestick2, plot_day_summary, candlestick2
 
@@ -160,6 +166,8 @@ class Fundamental_Analysis(object):
 		# Check if data has being loaded
 		self.__createValuationMetrics()
 		self.__createIncomeMetrics(timeline)
+
+		#print(self.valuations)
 		
 		# check if statemnts values exists
 		if not self.__missingStatementInformation(self.valuations,"EV"):
@@ -178,7 +186,7 @@ class Fundamental_Analysis(object):
 		self.__timelineCheck(timeline)
 		'''
 		Enterprise Value: How much would it cost to buy the company outright
-
+		
 		Link: https://www.investopedia.com/terms/e/enterprisevalue.asp
 		'''
 		# Check if data has being loaded
@@ -186,20 +194,26 @@ class Fundamental_Analysis(object):
 		#self.__createMarketCap()
 		self.__createBalanceMetrics(timeline)
 		self.__createProfile()
-		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+		tempIndex = self.__checkpdIndex(self.valuations, self.balance_stmts)
+		if tempIndex[0]: self.valuations = tempIndex[1]
+
 
 		# check if statemnts values exists
-		self.__missingStatementInformation(self.balance_stmts,"shortLongTermDebt")
-		self.__missingStatementInformation(self.balance_stmts,"longTermDebt")
-		self.__missingStatementInformation(self.balance_stmts,"cash")
+		if not self.__missingStatementInformation(self.balance_stmts,"Total debt"): return 0
+		if not self.__missingStatementInformation(self.balance_stmts,"Cash and cash equivalents"): return 0
 
 		EV = []
-		for shortDebt, longDebt, cash_equivalents in zip(self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
+		for b_stmts, val in zip(self.balance_stmts,self.valuations):
+			val["EV"] = b_stmts["Total debt"] - b_stmts["Cash and cash equivalents"]
+		
+		'''
+		for shortDebt, longDebt, cash_equivalents in self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
 			total_debt = shortDebt + longDebt
 			EV.append(self.company_profile["mkCap"] + total_debt - cash_equivalents)
-
-		self.valuations["EV"] = EV
-		return self.valuations["EV"]
+		'''
+		#self.valuations["EV"] = EV
+		
+		return 0
 
 	def fowardPE(self, timeline='annual'):
 		'''
@@ -641,7 +655,7 @@ class Fundamental_Analysis(object):
 			self.income_stmts
 		except AttributeError:
 			self.income(timeline)
-			if self.income_stmts.empty:
+			if self.income_stmts == None:
 				raise Exception("DataUnavailable","Data does not exist")
 
 	def __createCashMetrics(self, timeline):
@@ -649,7 +663,7 @@ class Fundamental_Analysis(object):
 			self.cash_stmts
 		except AttributeError:
 			self.cash(timeline)
-			if self.cash_stmts.empty:
+			if self.cash_stmts == None:
 				raise Exception("DataUnavailable","Data does not exist")
 
 	def __createBalanceMetrics(self, timeline):
@@ -657,14 +671,14 @@ class Fundamental_Analysis(object):
 			self.balance_stmts
 		except AttributeError:
 			self.balance(timeline)
-			if self.balance_stmts.empty:
+			if self.balance_stmts == None:
 				raise Exception("DataUnavailable","Data does not exist")
 
 	def __createValuationMetrics(self):
 		try:
 			self.valuations
 		except AttributeError:
-			self.valuations = pd.DataFrame()
+			self.valuations = [dict()] #pd.DataFrame()
 
 	def __createFinancialMetrics(self):
 		try:
@@ -683,10 +697,10 @@ class Fundamental_Analysis(object):
 		
 		if "annual" in timeline or "quarterly" in timeline:
 			url = 'https://financialmodelingprep.com/api/v3/financials/'
-			if type_stmts in 'balance':
+			if type_stmts in 'income':
 				url = url + '/income-statement/'+ self.ticker
 				
-			elif type_stmts in 'income':
+			elif type_stmts in 'balance':
 				url = url + '/balance-sheet-statement/'+ self.ticker
 			
 			elif type_stmts in 'cash':
@@ -697,13 +711,15 @@ class Fundamental_Analysis(object):
 
 
 			temp_stmts = self.__webData(url)
+			
 			stmts = temp_stmts['financials']
-
-			'''
-			raw = self.fundamentals.get_financial_stmts(timeline, type_stmts)
-			print(raw)
-			stmts = self.__raw2pd(raw[list(raw.keys())[0]])
-			'''
+			
+			for s in stmts:
+				for k in s.keys():
+					if "date" in k:
+						continue
+					s[k] = dRep.Decimal(s[k]) 
+				
 			return stmts
 
 		else:
@@ -746,24 +762,38 @@ class Fundamental_Analysis(object):
 					 index=date_index,
 					 columns=key_list)
 
-	def __checkpdIndex(self, pd_frame, index):
-		if pd_frame.empty:
-			pd_frame["date"] = index
-			pd_frame.set_index('date', inplace=True)
-			return True
+	def __checkpdIndex(self, data_dict, index):
+		'''
+		Check if the variable contains the date. If not add them
+		'''
 
-		return False
+		# check if dict is empty
+		if not data_dict[0]:
+			data_dict = []
+			for d in index:
+				data_dict.append({'date':d['date']})
+			'''
+			if data_dict.empty:
+				data_dict["date"] = index
+				data_dict.set_index('date', inplace=True)
+			'''
+
+			return True, data_dict
+		
+		return False, []
 
 	def __missingStatementInformation(self, statement, colmn):
 		'''
 		This is used to check if the information exist already in the pandas data frame
 		'''
-		print( )
+		#print(statement[0])
 		try:
-			statement[colmn]
+			statement[0][colmn]
+			#print("Ok")
 			return True
 		except KeyError:
-			statement[colmn] = 0
+			#print("False")
+			#statement[0][colmn] = 0
 			return False
 
 	def __downloadBalanceStockInformation(self, Q_sheet):
@@ -1762,22 +1792,21 @@ def __fundamental_test():
 	ticker =  "KO"
 	TRL = stock(ticker)
 
-	print (TRL.balance())
-	print (TRL.income())
-	print (TRL.cash())
+	#print ("Balance: ", TRL.balance()[0])
+	#print ("Income: ", TRL.income()[0])
+	#print ("Cash: ",TRL.cash()[0])
 
 	# Valuations
-	print ( "EV per Revenue: ", TRL.EVperRevenue())
+	
+	#print ( "EV per Revenue: ", TRL.EVperRevenue())
 	print ( "enterprise value: ", TRL.enterpriseValue())
-	#print ( "TTM EPS: ", TRL.fowardPE()) # To bedevelop
-	print ( "book Value: ", TRL.bookValue())
-	#print ( "TTM EPS: ", TRL.PEG()) # to be developt
-	print ( "price Sales Ratio: ", TRL.priceSalesRatio())
-	print ( "TTM EPS: ", TRL.priceBookValue()) 
-	#print ( "TTM EPS: ", TRL.enterpriseEBITDA()) # To be developt
+	#print ( "book Value: ", TRL.bookValue())
+	#print ( "price Sales Ratio: ", TRL.priceSalesRatio())
+	#print ( "TTM EPS: ", TRL.priceBookValue()) 
 	
 	
 	# Finances 
+	#print(TRL.RevenuePerShare())
 
 	# Trading
 	#print ( "TTM EPS: ", TRL.trailingEPS())
