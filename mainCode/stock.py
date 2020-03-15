@@ -157,6 +157,29 @@ class Fundamental_Analysis(object):
 	self.__createValuationMetrics()
 	self.valuations
 	'''
+	def enterpriseValue(self, timeline='annual'):
+		self.__timelineCheck(timeline)
+		'''
+		Enterprise Value: How much would it cost to buy the company outright
+		
+		Link: https://www.investopedia.com/terms/e/enterprisevalue.asp
+		'''
+		# Check if data has being loaded
+		self.__createBalanceMetrics(timeline)
+		self.__createValuationMetrics(self.balance_stmts)
+		
+		self.__createProfile()
+
+		# check if statemnts values exists
+		if not self.__missingStatementInformation(self.balance_stmts,"Total debt"): return -1
+		if not self.__missingStatementInformation(self.balance_stmts,"Cash and cash equivalents"): return -1
+
+		EV = []
+		for i in range(0,len(self.valuations)):
+			self.valuations[i]["EV"] = self.company_profile['mktCap'] + self.balance_stmts[i]["Total debt"] - self.balance_stmts[i]["Cash and cash equivalents"]
+
+		
+		return self.valuations
 
 	def EVperRevenue(self, timeline='annual'):
 		self.__timelineCheck(timeline)
@@ -181,39 +204,6 @@ class Fundamental_Analysis(object):
 		self.valuations["ev_revenue"] = ev_revenue
 
 		return self.valuations["ev_revenue"]
-
-	def enterpriseValue(self, timeline='annual'):
-		self.__timelineCheck(timeline)
-		'''
-		Enterprise Value: How much would it cost to buy the company outright
-		
-		Link: https://www.investopedia.com/terms/e/enterprisevalue.asp
-		'''
-		# Check if data has being loaded
-		self.__createValuationMetrics()
-		#self.__createMarketCap()
-		self.__createBalanceMetrics(timeline)
-		self.__createProfile()
-		tempIndex = self.__checkpdIndex(self.valuations, self.balance_stmts)
-		if tempIndex[0]: self.valuations = tempIndex[1]
-
-
-		# check if statemnts values exists
-		if not self.__missingStatementInformation(self.balance_stmts,"Total debt"): return 0
-		if not self.__missingStatementInformation(self.balance_stmts,"Cash and cash equivalents"): return 0
-
-		EV = []
-		for b_stmts, val in zip(self.balance_stmts,self.valuations):
-			val["EV"] = b_stmts["Total debt"] - b_stmts["Cash and cash equivalents"]
-		
-		'''
-		for shortDebt, longDebt, cash_equivalents in self.balance_stmts["shortLongTermDebt"], self.balance_stmts["longTermDebt"],self.balance_stmts["cash"]):
-			total_debt = shortDebt + longDebt
-			EV.append(self.company_profile["mkCap"] + total_debt - cash_equivalents)
-		'''
-		#self.valuations["EV"] = EV
-		
-		return 0
 
 	def fowardPE(self, timeline='annual'):
 		'''
@@ -351,26 +341,15 @@ class Fundamental_Analysis(object):
 	def currentRatio(self,timeline='annual'):
 		'''
 		'''
-		print("shit")
 		self.__timelineCheck(timeline)
-		print("Lol")
-		self.__createFinancialMetrics()
-		print ("end")
 		self.__createBalanceMetrics(timeline)
-		print(" fuck")
-		self.__checkpdIndex(self.financial, self.balance_stmts.index)
-		print("pass")
+		self.__createFinancialMetrics(self.balance_stmts)
 
-		current_ratio = []
-		for assets, liabilities in zip(self.balance_stmts["totalCurrentAssets"],self.balance_stmts["totalCurrentLiabilities"]):
-			print(assets,liabilities )
-			current_ratio.append(float(assets)/float(liabilities))
+		for i in range(0,len(self.balance_stmts)):
+			self.financial[i]["Current-ratio"] = self.balance_stmts[i]["Total current assets"]/self.balance_stmts[i]["Total current liabilities"]
+			#print(self.balance_stmts[i]["Total current assets"], self.balance_stmts[i]["Total current liabilities"])
 
-		self.financial["current-ratio"] = current_ratio
-
-
-
-		return self.financial["current-ratio"]
+		return self.financial
 
 	def RevenuePerShare(self,timeline='annual'):
 		'''
@@ -674,24 +653,30 @@ class Fundamental_Analysis(object):
 			if self.balance_stmts == None:
 				raise Exception("DataUnavailable","Data does not exist")
 
-	def __createValuationMetrics(self):
+	def __createValuationMetrics(self, statement):
 		try:
 			self.valuations
 		except AttributeError:
+			# if valuation is empty
 			self.valuations = [dict()] #pd.DataFrame()
+			tempIndex = self.__checkpdIndex(self.valuations, statement)
+			if tempIndex[0]: self.valuations = tempIndex[1]
 
-	def __createFinancialMetrics(self):
+	def __createFinancialMetrics(self, statement):
 		try:
 			self.financial
 		except AttributeError:
-			self.financial = pd.DataFrame()
+			self.financial = [dict()] #pd.DataFrame()
+			tempIndex = self.__checkpdIndex(self.financial, statement)
+			if tempIndex[0]: self.financial = tempIndex[1]
 
-	def __createTradingMetrics(self):
+	def __createTradingMetrics(self, statement):
 		try:
 			self.trading
 		except AttributeError:
-			self.trading = pd.DataFrame()
-			self.__checkpdIndex(self.trading,[datetime.date.today()])
+			self.trading = [dict()] #pd.DataFrame()
+			tempIndex = self.__checkpdIndex(self.trading, statement)
+			if tempIndex[0]: self.trading = tempIndex[1]
 
 	def __statements(self, timeline, type_stmts):
 		
@@ -730,8 +715,13 @@ class Fundamental_Analysis(object):
 		url = 'https://financialmodelingprep.com/api/v3/company/profile/' + self.ticker
 		webRaw = self.__webData(url)
 		company_profile =  webRaw['profile']
-		return company_profile 
 
+		for c in company_profile.keys():
+			if 'beta' in c or 'mktCap' in c or 'volAvg' in c or 'lastDiv' in c or 'price' in c:
+				company_profile[c] = dRep.Decimal(company_profile[c])
+				#	print(c, company_profile[c] )
+		
+		return company_profile 
 
 	def __raw2pd(self,raw_data):
 		# Get all the list dont repeat
@@ -1798,8 +1788,8 @@ def __fundamental_test():
 
 	# Valuations
 	
+	#print ( "enterprise value: ", TRL.enterpriseValue())
 	#print ( "EV per Revenue: ", TRL.EVperRevenue())
-	print ( "enterprise value: ", TRL.enterpriseValue())
 	#print ( "book Value: ", TRL.bookValue())
 	#print ( "price Sales Ratio: ", TRL.priceSalesRatio())
 	#print ( "TTM EPS: ", TRL.priceBookValue()) 
@@ -1807,6 +1797,7 @@ def __fundamental_test():
 	
 	# Finances 
 	#print(TRL.RevenuePerShare())
+	print(TRL.currentRatio("quarterly"))
 
 	# Trading
 	#print ( "TTM EPS: ", TRL.trailingEPS())
