@@ -97,12 +97,9 @@ import decimal 					as dRep
 
 
 pd.set_option('mode.chained_assignment', None)
-#print(dRep.getcontext())
-# plot
+# set two decimal points
+dRep.getcontext().prec = 3
 
-
-# from matplotlib.finance
-#from mpl_finance import candlestick2, plot_day_summary, candlestick2
 
 class Fundamental_Analysis(object):
 	# Create valuations, Financial and Trading information for pandas
@@ -111,8 +108,9 @@ class Fundamental_Analysis(object):
 		'''
 		self.fundamentals = YahooFinancials(ticker)
 
-	def profile(self):
-		self.company_profile = self.__profile()
+	def profile(self, timeline='annual'):
+		self.__timelineCheck(timeline)
+		self.company_profile = self.__profile(timeline)
 
 		return self.company_profile
 
@@ -143,10 +141,12 @@ class Fundamental_Analysis(object):
 
 		return self.cash_stmts
 
-	def earnings(self):
+	def ratios(self, timeline='annual'):
 		'''
 		'''
-		raise Exception("To be developt")
+		self.__timelineCheck(timeline)
+		self.company_ratio = self.__ratios(timeline)
+		return self.company_ratio
 
 	'''
 	################# Information Derived from statements ####################
@@ -167,7 +167,6 @@ class Fundamental_Analysis(object):
 		# Check if data has being loaded
 		self.__createBalanceMetrics(timeline)
 		self.__createValuationMetrics(self.balance_stmts)
-		
 		self.__createProfile()
 
 		# check if statemnts values exists
@@ -187,31 +186,26 @@ class Fundamental_Analysis(object):
 		Enterprise Value per revenue: 
 		'''
 		# Check if data has being loaded
-		self.__createValuationMetrics()
 		self.__createIncomeMetrics(timeline)
-
-		#print(self.valuations)
+		self.__createValuationMetrics(self.income_stmts)
 		
 		# check if statemnts values exists
-		if not self.__missingStatementInformation(self.valuations,"EV"):
+		if not self.__missingStatementInformation(self.valuations,"EV"): 
+			print("actually")
 			self.enterpriseValue(timeline)
 
 		# Calculate
-		ev_revenue =[]
-		for total_revenue, EV in zip(self.income_stmts["totalRevenue"], self.valuations["EV"]):
-			ev_revenue.append(EV/total_revenue)
+		for i in range(0, len(self.income_stmts)):
+			self.valuations[i]["ev_revenue"] = self.valuations[i]["EV"]/self.income_stmts[i]["Revenue"]
 
-		self.valuations["ev_revenue"] = ev_revenue
-
-		return self.valuations["ev_revenue"]
+		return self.valuations
 
 	def fowardPE(self, timeline='annual'):
 		'''
 		foward PE ratio
 		'''
-		self.__timelineCheck(timeline)
-
 		raise Exception("To be developt")
+		self.__timelineCheck(timeline)	
 
 	def bookValue(self, timeline='annual'):
 		'''
@@ -225,23 +219,34 @@ class Fundamental_Analysis(object):
 		self.__timelineCheck(timeline)
 		# Check if the data has being loaded
 		self.__createBalanceMetrics(timeline)
-		self.__createValuationMetrics()
-		#self.__createOutstandShMetrics()
-		self.__checkpdIndex(self.valuations, self.balance_stmts.index)
+		self.__createValuationMetrics(self.balance_stmts)
 
-		self.__missingStatementInformation(self.balance_stmts,"intangibleAssets")
-		self.__missingStatementInformation(self.balance_stmts,"totalAssets")
-		self.__missingStatementInformation(self.balance_stmts,"totalLiab")
+		# Check if information is missing
+		if not self.__missingStatementInformation(self.balance_stmts,"Goodwill and Intangible Assets"): return -1
+		if not self.__missingStatementInformation(self.balance_stmts,"Total current assets"): return -1
+		if not self.__missingStatementInformation(self.balance_stmts,"Total current liabilities"): return -1
 
-		book_value = []
-		for total_assets, intangible_assets, total_liability in zip(self.balance_stmts["totalAssets"],self.balance_stmts["intangibleAssets"],self.balance_stmts["totalLiab"]):
-			tangable_assets = total_assets - intangible_assets
-			book_value.append(tangable_assets - total_liability)
+		for i in range(0, len(self.balance_stmts)):
+			tangable_assets = self.balance_stmts[i]["Total current assets"] - self.balance_stmts[i]["Goodwill and Intangible Assets"]
+			self.valuations[i]["Book value"] = tangable_assets - self.balance_stmts[i]["Total current liabilities"] 
 
-		self.valuations["book value"] = book_value
-		#self.valuations["book value per share"] = book_value_per_share
+		return self.valuations
 
-		return self.valuations["book value"]
+	def BookValuePerShare(self, timeline='annual'):
+		
+		self.__timelineCheck(timeline)
+		self.__createBalanceMetrics(timeline)
+		self.__createValuationMetrics(self.balance_stmts)
+		self.__createProfile()
+
+		# Check statement values exists
+		if not self.__missingStatementInformation(self.valuations,"Book value"):
+			self.bookValue(timeline)
+
+		for i in range(0,len(self.balance_stmts)):
+			self.valuations[i]["BVpS"] = self.valuations[i]["Book value"]/self.company_profile["mktCap"] 
+
+		return self.valuations
 
 	def PEG(self, timeline='annual'):
 		'''
@@ -286,23 +291,6 @@ class Fundamental_Analysis(object):
 
 		#raise Exception("To be developt")
 
-	def priceBookValue(self, timeline='annual'):
-		raise Exception("Depricated")
-		self.__timelineCheck(timeline)
-		self.__createValuationMetrics()
-		self.__createMarketCap()
-
-		# Check statement values exists
-		if not self.__missingStatementInformation(self.valuations,"book value"):
-			self.bookValue(timeline)
-
-		PB = []
-		for book in self.valuations["book value"]:
-			PB.append(float(self.market_cap)/float(book))
-
-		self.valuations["PB"] = PB
-		return self.valuations["PB"]
-
 	def enterpriseEBITDA(self,timeline='annual'):
 		'''
 		'''
@@ -344,6 +332,9 @@ class Fundamental_Analysis(object):
 		self.__timelineCheck(timeline)
 		self.__createBalanceMetrics(timeline)
 		self.__createFinancialMetrics(self.balance_stmts)
+
+		# Check if assets and liabilities exist
+
 
 		for i in range(0,len(self.balance_stmts)):
 			self.financial[i]["Current-ratio"] = self.balance_stmts[i]["Total current assets"]/self.balance_stmts[i]["Total current liabilities"]
@@ -711,8 +702,11 @@ class Fundamental_Analysis(object):
 			print("The timeline is not define correctly")
 			return None
 
-	def __profile(self):
+	def __profile(self, timeline):
 		url = 'https://financialmodelingprep.com/api/v3/company/profile/' + self.ticker
+		if timeline in 'quarterly':
+			url = url + '?period=quarter'
+
 		webRaw = self.__webData(url)
 		company_profile =  webRaw['profile']
 
@@ -722,6 +716,26 @@ class Fundamental_Analysis(object):
 				#	print(c, company_profile[c] )
 		
 		return company_profile 
+
+	def __ratios(self, timeline):
+		url = "https://financialmodelingprep.com/api/v3/financial-ratios/" + self.ticker
+		if timeline in 'quarterly':
+			url = url + '?period=quarter'
+		webRaw = self.__webData(url)
+		comp_ratio = webRaw["ratios"]
+		#print(comp_ratio)
+		for r in comp_ratio:
+			for k in r.keys():
+				if k in "date":
+					continue
+				for l in r[k].keys():
+					#print (r[k][l])
+					if not r[k][l]:
+						continue
+					r[k][l] = dRep.Decimal(r[k][l])
+					
+
+		return comp_ratio
 
 	def __raw2pd(self,raw_data):
 		# Get all the list dont repeat
@@ -1785,19 +1799,24 @@ def __fundamental_test():
 	#print ("Balance: ", TRL.balance()[0])
 	#print ("Income: ", TRL.income()[0])
 	#print ("Cash: ",TRL.cash()[0])
+	#print ("Profile: ", TRL.profile())
+	print ("Ratios: ", TRL.ratios())
+
+	#for s in TRL.company_ratio:
+	#	print(s.keys())
 
 	# Valuations
-	
 	#print ( "enterprise value: ", TRL.enterpriseValue())
 	#print ( "EV per Revenue: ", TRL.EVperRevenue())
 	#print ( "book Value: ", TRL.bookValue())
+	#print ( "Price Book Value: ", TRL.BookValuePerShare()) 
 	#print ( "price Sales Ratio: ", TRL.priceSalesRatio())
-	#print ( "TTM EPS: ", TRL.priceBookValue()) 
+	
 	
 	
 	# Finances 
 	#print(TRL.RevenuePerShare())
-	print(TRL.currentRatio("quarterly"))
+	#print(TRL.currentRatio("quarterly"))
 
 	# Trading
 	#print ( "TTM EPS: ", TRL.trailingEPS())

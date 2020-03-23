@@ -33,22 +33,25 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	Current Liabilities or the ratio between assets over liabilities be greater than 2
 	'''
 	try:
-		print(TMK.currentRatio('quarterly'))
+		#TMK.currentRatio('quarterly')
+		TMK.ratios('quarterly')
 	except Exception as insta:
 		print("Error: Current Ratio")
+		raise
 		return False
-
-	if TMK.financial["current-ratio"][0] > max_current_ratio:
+	
+	if TMK.company_ratio[0]["liquidityMeasurementRatios"]["currentRatio"] > max_current_ratio:
 		print("\t[ Ok ] Current ratio")
 	else:
 		print("\t[Fail] Current ratio")
 		return False
 
+	
 	########################### Price to earning ratio ############################
 	'''
 	Price to Earnings is su
 	'''
-	
+	raise
 	try:
 		TMK.trailingPE()
 	except Exception as insta:
@@ -188,9 +191,9 @@ def valueStocks(ticker, sheetClass, cellnumber):
 	return msg
 
 def main():
-	to_email, from_email, pwd_email, title, sheet_link = email_information('../email_passwd.init')
+	#to_email, from_email, pwd_email, title, sheet_link = email_information('../email_passwd.init')
 
-	watchlist = Gsheet(sheet_link)
+	#watchlist = Gsheet(sheet_link)
 
 	#tickerSwitcher = "Full"
 	#tickerSwitcher = "Other"
@@ -200,12 +203,13 @@ def main():
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ['KO']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
+		ticker_list = ['IMOS']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
 
 		passTestStock = []
 		for ticker in ticker_list:
 			print(ticker)	
 			worthy = defensive_investor_portafolio(ticker,dividends_on=False)
+			raise
 			print(ticker,": ", worthy,"\n")
 			if worthy:
 				passTestStock.append(ticker)
