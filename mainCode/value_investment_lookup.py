@@ -13,9 +13,9 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	min_price_earnings=26.5,#22.5 
 	max_price_book_value=1, 
 	min_total_revenue = 500000, 
-	dividends_on = True, 
 	min_earnings_stability=0, 
-	min_earnings_growth=6):
+	min_earnings_growth=6,
+	dividends_on = True ):
 
 	
 	try:
@@ -77,10 +77,10 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	if TMK.trading[0]["Price-Book value"] < max_price_book_value and TMK.trading[0]["Price-Book value"] >= 0:
 		print("\t[ Ok ] Price book value")
 	else:
-		print("\t[Fail] Price book value")
+		print("\t[Fail] Price book value ", TMK.trading[0]["Price-Book value"])
 		return False
 
-	raise
+	
 
 	####################### Enterprise Size ######################
 	'''
@@ -91,26 +91,13 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	except Exception as insta:
 		return False
 
-
-
-	if TMK.income_stmts.empty:
-		return False
-	if TMK.income_stmts["totalRevenue"][0] > min_total_revenue:
+	if TMK.income_stmts[0]["Revenue"] > min_total_revenue:
 		print("\t[ Ok ] Sales/Enterprise Size")
 	else:
 		print("\t[Fail] Sales/Enterprise Size")
 		return False
 
-	###################### Dividends more than 20 years ###########################
-	'''
-	Pay dividends
-	'''
-	if dividends_on:
-		if TMK.dividendCheck():
-			print("\t[ Ok ] Dividends")
-		else:
-			print("\t[Fail] Dividends")
-			return False
+	
 
 	########################## Earnings stability over 10 years ##################
 	'''
@@ -118,18 +105,12 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 	
 	try:
-		TMK.EPS()
+		TMK.income()
 	except Exception as insta:
 		return False
 
-	'''
-	if all(i >= min_earnings_stability for i in TMK.financial["EPS"]):
-		print("\t[ Ok ] Earnings per share Stability")
-	else:
-		print("\t[Fail] Earnings per share Stability")
-	'''
-	for  eps in TMK.financial["EPS"]:
-		if eps < min_earnings_stability:
+	for i in range(0,10):
+		if TMK.income_stmts[i]["EPS"] < min_earnings_stability:
 			print("\t[Fail] Earnings per share Stability")
 			return False
 
@@ -150,7 +131,7 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 
 	try:
-		eps_avg_beginning = (TMK.financial["EPS"][2] + TMK.financial["EPS"][3])/2
+		eps_avg_beginning = (TMK.income_stmts["EPS"][0] + TMK.income_stmts["EPS"][1] + TMK.income_stmts["EPS"][2])
 		eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
 	except IndexError:
 		return False
@@ -161,6 +142,20 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	else:
 		print("\t[Fail] Earnings per share Growth")
 		return False
+
+
+	###################### Dividends more than 20 years ###########################
+	'''
+	Pay dividends
+	'''
+	if dividends_on:
+		if TMK.dividendCheck():
+			print("\t[ Ok ] Dividends")
+		else:
+			print("\t[Fail] Dividends")
+			return False
+
+	raise
 
 	############################# End ####################################
 	return True
@@ -209,7 +204,7 @@ def main():
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ['IMOS']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
+		ticker_list = ['OSN']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
 
 		passTestStock = []
 		for ticker in ticker_list:

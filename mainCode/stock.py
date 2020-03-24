@@ -431,11 +431,12 @@ class Fundamental_Analysis(object):
 		for net_income, interest_expenses, depreciation in zip(self.income_stmts["netIncome"],self.income_stmts["interestExpense"], self.cash_stmts["depreciation"]):
 			print(net_income+ interest_expenses+depreciation)
 
-	def dividendCheck(self, years=20):
+	def dividendCheck_yahoo(self, years=20):
 		'''
 		Todo: 
 			Check the start company date
 		'''
+		raise Exception("Depricated")
 
 		# Get the timeline of dividends the user wants
 		to_date = datetime.datetime.today()
@@ -449,7 +450,7 @@ class Fundamental_Analysis(object):
 		to_date  = to_date.strftime("%Y-%m-%d")
 		
 		# Access all the dividends
-		if self.dividend(from_date=start_date, to_date=to_date) is None:
+		if self.dividend_yahoo(from_date=start_date, to_date=to_date) is None:
 			return False
 		
 		# check every year dividend
@@ -602,6 +603,27 @@ class Fundamental_Analysis(object):
 		return self.trading
 
 	'''
+	### Dividends ###
+	'''
+	def dividends(self):
+		url = "https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/" + self.ticker
+		webRaw = self.__webData(url)
+		div  = webRaw["historical"]
+
+		for d in div:
+			d["date"] = datetime.datetime.strptime(d["date"],"%Y-%m-%d") 
+
+		self.div = div
+		return self.div
+
+	def dividendHist(self):
+		# Check div exist
+		self.__createDividends()
+
+		
+
+
+	'''
 	### Private Functions ###
 	'''
 	def __createTTMMetrics(self):
@@ -684,6 +706,12 @@ class Fundamental_Analysis(object):
 			self.key_metrics
 		except AttributeError:
 			self.metrics(timeline)
+
+	def __createDividends(self):
+		try:
+			self.div
+		except AttributeError:
+			self.dividends()
 
 	def __statements(self, timeline, type_stmts):
 		
@@ -769,9 +797,6 @@ class Fundamental_Analysis(object):
 				r[k] = dRep.Decimal(r[k])
 				
 		return key_m
-
-
-
 
 	def __raw2pd(self,raw_data):
 		# Get all the list dont repeat
@@ -1643,8 +1668,8 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 
 		return data
 
-	def dividend(self,period=60, from_date=None, to_date=None):
-
+	def dividend_yahoo(self,period=60, from_date=None, to_date=None):
+		raise Exception("Depricated")
 
 		if not from_date:
 			to_date = datetime.datetime.today()
@@ -1833,7 +1858,7 @@ def __fundamental_test():
 	TRL = stock(ticker)
 
 	#print ("Balance: ", TRL.balance()[0])
-	#print ("Income: ", TRL.income()[0])
+	print ("Income: ", TRL.income()[0])
 	#print ("Cash: ",TRL.cash()[0])
 	#print ("Profile: ", TRL.profile())
 	#print ("Ratios: ", TRL.ratios())
@@ -1860,7 +1885,7 @@ def __fundamental_test():
 	#print(TRL.bookValuePerShare())
 	#print(TRL.grahamNumber())
 	#print(TRL.priceGraham())
-	print(TRL.pricePerBookValue())
+	#print(TRL.pricePerBookValue())
 
 	#print (TRL.trading)
 	
@@ -1906,10 +1931,11 @@ def __testTickerlist():
 	getTickerList()
 
 def __dividendsExtract():
-	ticker = 'TSLA'
+	ticker = 'KO'
 	TRL = stock(ticker)
-	print(TRL.dividend(from_date='2008-08-15', to_date='2018-09-15'))
-	print(TRL.dividendCheck())	
+	#print(TRL.dividends())
+	#print(TRL.dividend(from_date='2008-08-15', to_date='2018-09-15'))
+	print(TRL.dividendHist())	
 
 def __checkChange():
 	ticker = 'ADS'
@@ -1940,9 +1966,9 @@ def __technical_test():
 if __name__=="__main__":
 	#__parent_classes()
 	#__other_test()
-	__fundamental_test()
+	#__fundamental_test()
 	#__time_lookup_day_values()
 	#__testTickerlist()
-	#__dividendsExtract()
+	__dividendsExtract()
 	#__checkChange()
 	#__technical_test()
