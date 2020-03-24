@@ -16,12 +16,16 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	dividends_on = True, 
 	min_earnings_stability=0, 
 	min_earnings_growth=6):
+
+	
 	try:
 		TMK = stock(ticker)
 	except:
 		print("Error with ticker")
 		return False
 
+	
+	####################### Price #####################################
 	if (highprice < TMK.trade_history["Close"][-1]):
 		print ("\t[Fail] Price")
 		return False
@@ -64,18 +68,19 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 		print("\t[Fail] Price earnings")
 		return False
 
-	raise
 	########################## Price to assets ########################
-	print("book value")
 	try:
 		TMK.pricePerBookValue()
 	except Exception as insta:
 		return False
-	if TMK.trading["price-book value"][0] < max_price_book_value and TMK.trading["price-book value"][0] >= 0:
+	
+	if TMK.trading[0]["Price-Book value"] < max_price_book_value and TMK.trading[0]["Price-Book value"] >= 0:
 		print("\t[ Ok ] Price book value")
 	else:
 		print("\t[Fail] Price book value")
 		return False
+
+	raise
 
 	####################### Enterprise Size ######################
 	'''

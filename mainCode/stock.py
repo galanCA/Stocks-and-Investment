@@ -34,12 +34,12 @@ Goal is to extract
 		Return on Equity
 		Revenue 					- Income statement
 		Revenue Per Share 			- Done 
-		Quaterly Revenue Growth 	
+		Quarterly Revenue Growth 	
 		Gross Profit
 		EBITDA						- To work on
 		Net Income Avi to Common
 		Dilute EPS
-		Quaterly Earnings Growth
+		Quarterly Earnings Growth
 		Total Cash 
 		Total Cash Per Share
 		Total Debt
@@ -57,7 +57,7 @@ Goal is to extract
 		50-Day Moving Average
 		200 DayMoving Average
 		Avg Vol (3Month)
-		Shares Outstanding 			- last quaterly report - Done
+		Shares Outstanding 			- last quarterly report - Done
 		Float
 		% Held by Insiders
 		% Held by institutions
@@ -147,6 +147,12 @@ class Fundamental_Analysis(object):
 		self.__timelineCheck(timeline)
 		self.company_ratio = self.__ratios(timeline)
 		return self.company_ratio
+
+	def metrics(self, timeline='annual'):
+		self.__timelineCheck(timeline)
+		self.key_metrics = self.__metrics(timeline)
+		return self.key_metrics
+
 
 	'''
 	################# Information Derived from statements ####################
@@ -584,16 +590,16 @@ class Fundamental_Analysis(object):
 		'''
 		Compare the 
 		'''
-		self.__createTradingMetrics()
 		self.__timelineCheck("quarterly")
-		self.__createIncomeMetrics(self.prev_timeline)
+		self.__createKeyMetrics("quarterly")
+		self.__createTradingMetrics(self.key_metrics)
 
-		if not self.__missingStatementInformation(self.trading, "book value per share"):
-			self.bookValuePerShare()
-		
-		self.trading["price-book value"] = self.trade_history["Close"][-1]/self.trading["book value per share"]
+		# Get the latest price to book value
+		self.trading[0]["Price-Book value"] = dRep.Decimal(self.trade_history["Close"][-1])/self.key_metrics[0]["Book Value per Share"]
 
-		return self.trading["price-book value"]
+		# To get the other dates
+
+		return self.trading
 
 	'''
 	### Private Functions ###
@@ -673,6 +679,12 @@ class Fundamental_Analysis(object):
 			tempIndex = self.__checkpdIndex(self.trading, statement)
 			if tempIndex[0]: self.trading = tempIndex[1]
 
+	def __createKeyMetrics(self, timeline):
+		try:
+			self.key_metrics
+		except AttributeError:
+			self.metrics(timeline)
+
 	def __statements(self, timeline, type_stmts):
 		
 		if "annual" in timeline or "quarterly" in timeline:
@@ -729,7 +741,6 @@ class Fundamental_Analysis(object):
 			url = url + '?period=quarter'
 		webRaw = self.__webData(url)
 		comp_ratio = webRaw["ratios"]
-		#print(comp_ratio)
 		for r in comp_ratio:
 			for k in r.keys():
 				if k in "date":
@@ -742,6 +753,25 @@ class Fundamental_Analysis(object):
 					
 
 		return comp_ratio
+
+	def __metrics(self, timeline):
+		url = "https://financialmodelingprep.com/api/v3/company-key-metrics/" + self.ticker 
+		if timeline in 'quarterly':
+			url +=  '?period=quarter'
+
+		webRaw = self.__webData(url)
+		key_m  = webRaw["metrics"]
+		for r in key_m:
+			for k in r.keys():
+
+				if k in "date":	continue
+				if not r[k]: continue
+				r[k] = dRep.Decimal(r[k])
+				
+		return key_m
+
+
+
 
 	def __raw2pd(self,raw_data):
 		# Get all the list dont repeat
@@ -1826,11 +1856,11 @@ def __fundamental_test():
 
 	# Trading
 	#print ( "TTM EPS: ", TRL.trailingEPS())
-	print ("TTM PE: ", TRL.trailingPE())
+	#print ("TTM PE: ", TRL.trailingPE())
 	#print(TRL.bookValuePerShare())
 	#print(TRL.grahamNumber())
 	#print(TRL.priceGraham())
-	#print(TRL.pricePerBookValue())
+	print(TRL.pricePerBookValue())
 
 	#print (TRL.trading)
 	
