@@ -490,31 +490,35 @@ class Fundamental_Analysis(object):
 		Trailing EPS:
 
 		'''	
-		self.__createTradingMetrics()
-		if not self.__missingStatementInformation(self.trading, "Outstanding shares"):
-			self.outstandingShares()
-
-		income_raw = self.__getTTMIncome()
+		self.__createIncomeMetrics('quarterly')
+		self.__createTradingMetrics(self.income_stmts)
 		
-		ttm = 0
-		for net_income in income_raw["netIncome"]:
-			ttm = ttm + net_income
-
-		self.trading["TTM-EPS"] = (float(ttm)/self.trading["Outstanding shares"])
-
-		return self.trading["TTM-EPS"]
+		for i in range(0, len(self.trading)-3):
+			self.trading[i]["EPS-TTM"] = 0
+			for j in range(i, i+3):
+				if not self.income_stmts[j]["EPS"]:
+					self.trading[i]["EPS-TTM"] = None
+					break
+				self.trading[i]["EPS-TTM"] += self.income_stmts[j]["EPS"]
+		
+		return self.trading
 
 	def trailingPE(self):
 		'''
 		trailing Price Earning ratio
 		'''
-		self.__createTradingMetrics()
+		self.__createIncomeMetrics('quarterly')
+		self.__createTradingMetrics(self.income_stmts)
+
 		if not self.__missingStatementInformation(self.trading, "TTM-EPS"):
 			self.trailingEPS()
 
-		self.trading["price-earnings"] = self.trade_history["Close"][-1]/self.trading["TTM-EPS"]
+		# Get the latest PE-TTM
+		self.trading[0]["PE-TTM"] = dRep.Decimal(self.trade_history["Close"][-1])/self.trading[0]["EPS-TTM"]
 
-		return self.trading["price-earnings"]
+		# need to find it for all dates
+
+		return self.trading
 	
 	def bookValuePerShare(self):
 		'''
@@ -685,14 +689,16 @@ class Fundamental_Analysis(object):
 			if timeline in 'quarterly':
 				url = url + '?period=quarter'
 
-
 			temp_stmts = self.__webData(url)
 			
 			stmts = temp_stmts['financials']
 			
 			for s in stmts:
 				for k in s.keys():
+					#print(s[k])
 					if "date" in k:
+						continue
+					if not s[k]:
 						continue
 					s[k] = dRep.Decimal(s[k]) 
 				
@@ -1800,7 +1806,7 @@ def __fundamental_test():
 	#print ("Income: ", TRL.income()[0])
 	#print ("Cash: ",TRL.cash()[0])
 	#print ("Profile: ", TRL.profile())
-	print ("Ratios: ", TRL.ratios())
+	#print ("Ratios: ", TRL.ratios())
 
 	#for s in TRL.company_ratio:
 	#	print(s.keys())
@@ -1820,7 +1826,7 @@ def __fundamental_test():
 
 	# Trading
 	#print ( "TTM EPS: ", TRL.trailingEPS())
-	#print ("TTM PE: ", TRL.trailingPE())
+	print ("TTM PE: ", TRL.trailingPE())
 	#print(TRL.bookValuePerShare())
 	#print(TRL.grahamNumber())
 	#print(TRL.priceGraham())

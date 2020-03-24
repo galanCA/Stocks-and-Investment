@@ -37,7 +37,6 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 		TMK.ratios('quarterly')
 	except Exception as insta:
 		print("Error: Current Ratio")
-		raise
 		return False
 	
 	if TMK.company_ratio[0]["liquidityMeasurementRatios"]["currentRatio"] > max_current_ratio:
@@ -51,19 +50,21 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 	Price to Earnings is su
 	'''
-	raise
+	
 	try:
 		TMK.trailingPE()
 	except Exception as insta:
 		print("Error: Trailing PE")
+		raise
 		return False
 		
-	if TMK.trading["price-earnings"][0] < min_price_earnings:
+	if TMK.trading[0]["PE-TTM"] < min_price_earnings:
 		print("\t[ Ok ] Price earnings")
 	else:
 		print("\t[Fail] Price earnings")
 		return False
 
+	raise
 	########################## Price to assets ########################
 	print("book value")
 	try:
