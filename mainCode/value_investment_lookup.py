@@ -14,7 +14,7 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	max_price_book_value=1, 
 	min_total_revenue = 500000, 
 	min_earnings_stability=0, 
-	min_earnings_growth=6,
+	min_earnings_growth=33,
 	dividends_on = True ):
 
 	
@@ -131,11 +131,15 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 
 	try:
-		eps_avg_beginning = (TMK.income_stmts["EPS"][0] + TMK.income_stmts["EPS"][1] + TMK.income_stmts["EPS"][2])
-		eps_avg_end = (TMK.financial["EPS"][0] + TMK.financial["EPS"][1])/2
+		eps_avg_beginning = (TMK.income_stmts[0]["EPS"] + TMK.income_stmts[1]["EPS"] + TMK.income_stmts[2]["EPS"])
+		if len(TMK.income_stmts) <= 10:
+			eps_avg_end = (TMK.income_stmts[-3]["EPS"] + TMK.income_stmts[-2]["EPS"] + TMK.income_stmts[-1]["EPS"])
+		else:
+			eps_avg_end = (TMK.income_stmts[8]["EPS"] + TMK.income_stmts[9]["EPS"] + TMK.income_stmts[10]["EPS"])
 	except IndexError:
+		print("Errora")
 		return False
-
+		
 	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
 	if eps_growth > min_earnings_growth:
 		print("\t[ Ok ] Earnings per share Growth")
