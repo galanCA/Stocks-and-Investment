@@ -137,9 +137,8 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 		else:
 			eps_avg_end = (TMK.income_stmts[8]["EPS"] + TMK.income_stmts[9]["EPS"] + TMK.income_stmts[10]["EPS"])
 	except IndexError:
-		print("Errora")
 		return False
-		
+
 	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
 	if eps_growth > min_earnings_growth:
 		print("\t[ Ok ] Earnings per share Growth")
@@ -152,14 +151,13 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 	Pay dividends
 	'''
+
 	if dividends_on:
-		if TMK.dividendCheck():
+		if TMK.dividendHist(20):
 			print("\t[ Ok ] Dividends")
 		else:
 			print("\t[Fail] Dividends")
 			return False
-
-	raise
 
 	############################# End ####################################
 	return True
@@ -208,16 +206,18 @@ def main():
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ['OSN']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
+		ticker_list = ["MOMO"]#['FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
 
 		passTestStock = []
 		for ticker in ticker_list:
 			print(ticker)	
-			worthy = defensive_investor_portafolio(ticker,dividends_on=False)
-			raise
+			worthy = defensive_investor_portafolio(ticker,dividends_on=True)
+			
 			print(ticker,": ", worthy,"\n")
 			if worthy:
 				passTestStock.append(ticker)
+
+		raise
 	
 
 	elif tickerSwitcher is "S&P500":

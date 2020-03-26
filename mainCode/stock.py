@@ -520,6 +520,8 @@ class Fundamental_Analysis(object):
 		if not self.__missingStatementInformation(self.trading, "TTM-EPS"):
 			self.trailingEPS()
 
+		print(self.income_stmts[0]["EPS"], self.income_stmts[1]["EPS"], self.income_stmts[2]["EPS"])
+
 		# Get the latest PE-TTM
 		self.trading[0]["PE-TTM"] = dRep.Decimal(self.trade_history["Close"][-1])/self.trading[0]["EPS-TTM"]
 
@@ -608,6 +610,9 @@ class Fundamental_Analysis(object):
 	def dividends(self):
 		url = "https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/" + self.ticker
 		webRaw = self.__webData(url)
+		if not webRaw:
+			self.div = {}
+			return None
 		div  = webRaw["historical"]
 
 		for d in div:
@@ -616,12 +621,32 @@ class Fundamental_Analysis(object):
 		self.div = div
 		return self.div
 
-	def dividendHist(self):
+	def dividendHist(self, continue_years=10):
 		# Check div exist
 		self.__createDividends()
 
-		
+		if not self.div:
+			return False
 
+		current_year = datetime.datetime.now().year
+
+		stop_year = current_year - continue_years
+
+		prev_year = current_year
+		for d in self.div:
+			print(d["date"].year, prev_year)
+			if d["date"].year <= stop_year:
+				break
+			if d["date"].year == prev_year:
+				prev_year = d["date"].year
+				continue 
+			if d["date"].year == prev_year - 1:
+				prev_year = d["date"].year
+				continue 
+			else:
+				return False
+
+		return True
 
 	'''
 	### Private Functions ###
