@@ -520,7 +520,8 @@ class Fundamental_Analysis(object):
 		if not self.__missingStatementInformation(self.trading, "TTM-EPS"):
 			self.trailingEPS()
 
-		print(self.income_stmts[0]["EPS"], self.income_stmts[1]["EPS"], self.income_stmts[2]["EPS"])
+		if not self.trading[0]["EPS-TTM"]:
+			return None
 
 		# Get the latest PE-TTM
 		self.trading[0]["PE-TTM"] = dRep.Decimal(self.trade_history["Close"][-1])/self.trading[0]["EPS-TTM"]
@@ -633,8 +634,9 @@ class Fundamental_Analysis(object):
 		stop_year = current_year - continue_years
 
 		prev_year = current_year
+
 		for d in self.div:
-			print(d["date"].year, prev_year)
+			#print(d["date"].year, prev_year)
 			if d["date"].year <= stop_year:
 				break
 			if d["date"].year == prev_year:
@@ -1956,7 +1958,7 @@ def __testTickerlist():
 	getTickerList()
 
 def __dividendsExtract():
-	ticker = 'KO'
+	ticker = 'OSN'
 	TRL = stock(ticker)
 	#print(TRL.dividends())
 	#print(TRL.dividend(from_date='2008-08-15', to_date='2018-09-15'))

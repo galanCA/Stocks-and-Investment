@@ -13,8 +13,9 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	min_price_earnings=26.5,#22.5 
 	max_price_book_value=1, 
 	min_total_revenue = 500000, 
-	min_earnings_stability=0, 
-	min_earnings_growth=33,
+	min_earnings_stability=0,
+	years_earnings_stability = 10,
+	min_earnings_growth=26,
 	dividends_on = True ):
 
 	
@@ -40,13 +41,13 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 		#TMK.currentRatio('quarterly')
 		TMK.ratios('quarterly')
 	except Exception as insta:
-		print("Error: Current Ratio")
+		print("\t[Erro] Current Ratio")
 		return False
-	
-	if TMK.company_ratio[0]["liquidityMeasurementRatios"]["currentRatio"] > max_current_ratio:
+
+	if TMK.company_ratio[0]["liquidityMeasurementRatios"]["currentRatio"] and TMK.company_ratio[0]["liquidityMeasurementRatios"]["currentRatio"] > max_current_ratio:
 		print("\t[ Ok ] Current ratio")
 	else:
-		print("\t[Fail] Current ratio")
+		print("\t[Fail] Current ratio: ", TMK.company_ratio[0]["liquidityMeasurementRatios"]["currentRatio"])
 		return False
 
 	
@@ -56,16 +57,17 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 	
 	try:
-		TMK.trailingPE()
+		if not TMK.trailingPE():
+			print("\t[Error] Missing EPS")
+			return False
 	except Exception as insta:
-		print("Error: Trailing PE")
-		raise
+		print("\t[Error] Trailing PE")
 		return False
 		
 	if TMK.trading[0]["PE-TTM"] < min_price_earnings:
 		print("\t[ Ok ] Price earnings")
 	else:
-		print("\t[Fail] Price earnings")
+		print("\t[Fail] Price earnings: ", TMK.trading[0]["PE-TTM"])
 		return False
 
 	########################## Price to assets ########################
@@ -77,7 +79,7 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	if TMK.trading[0]["Price-Book value"] < max_price_book_value and TMK.trading[0]["Price-Book value"] >= 0:
 		print("\t[ Ok ] Price book value")
 	else:
-		print("\t[Fail] Price book value ", TMK.trading[0]["Price-Book value"])
+		print("\t[Fail] Price book value: ", TMK.trading[0]["Price-Book value"])
 		return False
 
 	
@@ -94,7 +96,7 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	if TMK.income_stmts[0]["Revenue"] > min_total_revenue:
 		print("\t[ Ok ] Sales/Enterprise Size")
 	else:
-		print("\t[Fail] Sales/Enterprise Size")
+		print("\t[Fail] Sales/Enterprise Size: ", TMK.income_stmts[0]["Revenue"])
 		return False
 
 	
@@ -109,8 +111,11 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	except Exception as insta:
 		return False
 
-	for i in range(0,10):
-		if TMK.income_stmts[i]["EPS"] < min_earnings_stability:
+	if len(TMK.income_stmts) < years_earnings_stability:
+		years_earnings_stability = len(TMK.income_stmts)
+
+	for i in range(0,years_earnings_stability):
+		if TMK.income_stmts[i]["EPS"] and TMK.income_stmts[i]["EPS"] < min_earnings_stability:
 			print("\t[Fail] Earnings per share Stability")
 			return False
 
@@ -131,19 +136,33 @@ def defensive_investor_portafolio(ticker, highprice=10000,
 	'''
 
 	try:
+		#print(TMK.income_stmts[0]["EPS"],TMK.income_stmts[1]["EPS"],TMK.income_stmts[2]["EPS"])	
 		eps_avg_beginning = (TMK.income_stmts[0]["EPS"] + TMK.income_stmts[1]["EPS"] + TMK.income_stmts[2]["EPS"])
+		
 		if len(TMK.income_stmts) <= 10:
-			eps_avg_end = (TMK.income_stmts[-3]["EPS"] + TMK.income_stmts[-2]["EPS"] + TMK.income_stmts[-1]["EPS"])
+			eps_avg_end = 0
+			for i in range(1,4):
+				if not TMK.income_stmts[-i]["EPS"]:
+					return False
+				eps_avg_end += TMK.income_stmts[-i]["EPS"]
+			
 		else:
 			eps_avg_end = (TMK.income_stmts[8]["EPS"] + TMK.income_stmts[9]["EPS"] + TMK.income_stmts[10]["EPS"])
+	except TypeError:
+		return False
+
 	except IndexError:
 		return False
+
+
+	#for eps in TMK.income_stmts:
+	#	print(eps["EPS"])
 
 	eps_growth = 100*((eps_avg_end - eps_avg_beginning)/eps_avg_beginning)
 	if eps_growth > min_earnings_growth:
 		print("\t[ Ok ] Earnings per share Growth")
 	else:
-		print("\t[Fail] Earnings per share Growth")
+		print("\t[Fail] Earnings per share Growth: ", eps_growth)
 		return False
 
 
@@ -198,15 +217,15 @@ def main():
 
 	#watchlist = Gsheet(sheet_link)
 
-	#tickerSwitcher = "Full"
+	tickerSwitcher = "Full"
 	#tickerSwitcher = "Other"
 	#tickerSwitcher = "NASDAQ"
-	tickerSwitcher = "ticker list"
+	#tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ["MOMO"]#['FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']#'FANH', 'IMOS', 'JOBS', 'MOMO', 'NATH', 'NCMI', 'NWLI', 'OMAB', 'OSN', 'SNFCA', 'SNH', 'SNHNL', 'WILC', 'YNDX', 'YY']
+		ticker_list = ["OFS"]
 
 		passTestStock = []
 		for ticker in ticker_list:
@@ -216,9 +235,6 @@ def main():
 			print(ticker,": ", worthy,"\n")
 			if worthy:
 				passTestStock.append(ticker)
-
-		raise
-	
 
 	elif tickerSwitcher is "S&P500":
 		print("S&P 500 list")
