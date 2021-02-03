@@ -959,7 +959,6 @@ class Fundamental_Analysis(object):
 		raw = web.json()
 		return raw
 
-
 class Technical_Analysis(object):
 	def __init__(self, ticker=None, currency='USD', amount='2000', days=1, period=60, exchange='NASD', from_date=None, end_date=None):
 		self.ticker = ticker
@@ -1321,6 +1320,7 @@ class Technical_Analysis(object):
 		self.candle_data.autoscale_view()
 		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 		plt.grid(True)
+		plt.title(self.ticker)
 
 		plt.draw()
 
@@ -1996,6 +1996,6 @@ if __name__=="__main__":
 	#__fundamental_test()
 	#__time_lookup_day_values()
 	#__testTickerlist()
-	__dividendsExtract()
+	#__dividendsExtract()
 	#__checkChange()
-	#__technical_test()
+	__technical_test()
