@@ -213,19 +213,19 @@ def valueStocks(ticker, sheetClass, cellnumber):
 	return msg
 
 def main():
-	#to_email, from_email, pwd_email, title, sheet_link = email_information('../email_passwd.init')
-
-	#watchlist = Gsheet(sheet_link)
+	to_email, from_email, pwd_email, title, sheet_link = email_information('../../email_passwd.init')
+	
+	watchlist = Gsheet(sheet_link)
 
 	tickerSwitcher = "Full"
 	#tickerSwitcher = "Other"
 	#tickerSwitcher = "NASDAQ"
-	#tickerSwitcher = "ticker list"
+	tickerSwitcher = "ticker list"
 	#tickerSwitcher = "S&P500"
 
 	if tickerSwitcher is "ticker list":
 		print ("Specific Ticker")
-		ticker_list = ["OFS"]
+		ticker_list = ["AAPL","TSLA"]
 
 		passTestStock = []
 		for ticker in ticker_list:
