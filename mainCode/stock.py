@@ -1320,6 +1320,7 @@ class Technical_Analysis(object):
 		self.candle_data.autoscale_view()
 		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 		plt.grid(True)
+		plt.title(self.ticker)
 
 		plt.draw()
 
