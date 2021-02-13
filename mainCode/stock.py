@@ -7,7 +7,8 @@ Function: class to get stock data and crypto from multiples places
 Todo:
 1) plotting the correct date
 3) Add import EDGAR
-
+4) Add Volume to the plots
+5) Use Volume as an indicator
 
 Working on:
 2) being able to get more than 2000 data points for crypto
@@ -1076,6 +1077,10 @@ class Technical_Analysis(object):
 
 	'''
 	### Trend-Following ###
+	Directional Systems
+	1-On-Balance Volume
+	Accumulation/Distribution
+	2- Donchian channel
 	'''
 	def SMA(self, price="Close", period=20, plot_data = True):
 		sma = []
