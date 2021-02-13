@@ -1567,12 +1567,57 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 		if not from_date:
 			start_date = to_date-datetime.timedelta(days)
 
+		# Check that start date is before the to date
 		trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
 
 		if "weekly" in period:
-			print(trade_history.index[0].weekday())
-
+			data, index, DoW = self._weekly_history(trade_history)
+			trade_history = pd.DataFrame(data = data, 
+				index=index, 
+				columns=["High","Low","Open","Close","Volume","Adj Close"])
+			
 		self.trade_history = trade_history.round(2)
+
+	def _weekly_history(self, trade_history):
+		days_to_week = 5 - trade_history.index[0].weekday()
+		temp_data = [[max(trade_history[:days_to_week]["High"]),
+			min(trade_history[:days_to_week]["Low"]),
+			trade_history["Open"][0],
+			trade_history["Close"][days_to_week],
+			sum(trade_history[:days_to_week]["Volume"]),
+			trade_history["Close"][days_to_week]]]
+
+		temp_index = [trade_history.index[0]]
+		temp_day = [trade_history.index[0].weekday()]
+
+		i = days_to_week + 1
+		startB = i
+		while i < len(trade_history):
+			if trade_history.index[i].weekday() == 4:
+				temp_data.append([max(trade_history[startB:i+1]["High"]),
+					min(trade_history[startB:i+1]["Low"]),
+					trade_history["Open"][startB],
+					trade_history["Close"][i],
+					sum(trade_history[startB:i+1]["Volume"]),
+					trade_history["Close"][i]])
+				temp_index.append(trade_history.index[startB])
+				temp_day.append(trade_history.index[startB].weekday())
+				startB = i +1
+
+			i += 1
+
+		if startB < len(trade_history):
+			i -= 1
+			temp_data.append([max(trade_history[startB:i+1]["High"]),
+				min(trade_history[startB:i+1]["Low"]),
+				trade_history["Open"][startB],
+				trade_history["Close"][i],
+				sum(trade_history[startB:i+1]["Volume"]),
+				trade_history["Close"][i]])
+			temp_index.append(trade_history.index[startB])
+			temp_index.append(trade_history.index[startB].weekday())
+		
+		return temp_data, temp_index, temp_day
 
 	def _statementsTrade(self, Q_dates):
 		'''
