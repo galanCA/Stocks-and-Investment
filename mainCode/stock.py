@@ -1550,23 +1550,27 @@ class Technical_Analysis(object):
 			self.plot()
 
 class stock(Technical_Analysis,Fundamental_Analysis):
-	def __init__(self, ticker, period=900, days=30, exchange='NASD', from_date=None, to_date=None):
+	def __init__(self, ticker, period="daily", days=900, exchange='NASD', from_date=None, to_date=None):
 		'''
-		Period: how many days of data to collect
+		Days: how many days of data to collect
+		Period: Either daily or weekly. How the candle stick should be
 		'''
 
 		Technical_Analysis.__init__(self, ticker, period=period, days=days, exchange=exchange, from_date=from_date, end_date=to_date)
 		Fundamental_Analysis.__init__(self, ticker)
 
-	def historic_data(self,ticker, period=60, days=1, from_date=None, to_date=None):
+	def historic_data(self,ticker, period="daily", days=60, from_date=None, to_date=None):
 		
-		if not from_date:
+		if not to_date:
 			to_date = datetime.datetime.today()
-			start_date = to_date-datetime.timedelta(period)
-			trade_history = web.DataReader(ticker, 'yahoo', start_date, to_date)
-		else:
 
-			trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
+		if not from_date:
+			start_date = to_date-datetime.timedelta(days)
+
+		trade_history = web.DataReader(ticker, 'yahoo', from_date, to_date)
+
+		if "weekly" in period:
+			print(trade_history.index[0].weekday())
 
 		self.trade_history = trade_history.round(2)
 
@@ -1890,7 +1894,7 @@ def __fundamental_test():
 	TRL = stock(ticker)
 
 	#print ("Balance: ", TRL.balance()[0])
-	print ("Income: ", TRL.income()[0])
+	#print ("Income: ", TRL.income()[0])
 	#print ("Cash: ",TRL.cash()[0])
 	#print ("Profile: ", TRL.profile())
 	#print ("Ratios: ", TRL.ratios())
@@ -1979,11 +1983,11 @@ def __checkChange():
 
 def __technical_test():
 	ticker =  "TSLA"
-	TRL = stock(ticker,period=400)
+	TRL = stock(ticker,days=400, period="weekly")
 	#print (TRL.trade_history["Close"])
 
 	#TRL.plot()
-	TRL.Impulse_System()
+	#TRL.Impulse_System()
 	#TRL.SMA(period=50)
 	#TRL.EMA(period=22)
 	#TRL.EMA(period=11)
