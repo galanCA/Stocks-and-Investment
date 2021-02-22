@@ -1111,6 +1111,7 @@ class Technical_Analysis(object):
 			self.ax2.plot(self.trade_history.index[period:len(self.trade_history[price])],ema)
 			self.__techincal_plot(self.trade_history.index[period:len(self.trade_history[price])], ema)
 
+		self.ema = ema
 		return ema
 
 	def MACD(self, price="Close",fast_ema=12,slow_ema=26, signal=9,plot_data=True):
@@ -1142,6 +1143,9 @@ class Technical_Analysis(object):
 			MACD_data.bar(tempx[mask1], MACD_histogram[mask1], color='red')
 			MACD_data.bar(tempx[mask2], MACD_histogram[mask2], color='green')
 
+		self.MACD_line = MACD_line
+		self.MACD_signal = MACD_signal
+		self.MACD_histogram = MACD_histogram
 		return [MACD_line, MACD_signal, MACD_histogram]
 
 
@@ -1290,13 +1294,13 @@ class Technical_Analysis(object):
 
 		plt.draw()
 
-	def Impulse_System(self, ema = 13, fast_ema = 12, slow_ema=26,signal=9 ):
+	def Impulse_System(self, ema = 13, fast_ema = 12, slow_ema=26,signal=9, plot_data = True ):
 		'''
 		'''
 		# get ema and MACD data
 		# Do it as pandas
 		ema_data = self.EMA(period=ema,plot_data=False)
-		MACD_data = self.MACD(fast_ema=fast_ema,slow_ema=slow_ema, signal=signal,plot_data=True) 
+		MACD_data = self.MACD(fast_ema=fast_ema,slow_ema=slow_ema, signal=signal, plot_data=plot_data) 
 
 
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
@@ -1321,13 +1325,14 @@ class Technical_Analysis(object):
 					MACD_data,
 					width=0.9, longcolor="g", shortcolor="r")
 
-		self.candle_data.xaxis_date()
-		self.candle_data.autoscale_view()
-		plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-		plt.grid(True)
-		plt.title(self.ticker)
+		if plot_data:
+			self.candle_data.xaxis_date()
+			self.candle_data.autoscale_view()
+			plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+			plt.grid(True)
+			plt.title(self.ticker)
 
-		plt.draw()
+			plt.draw()
 
 	def _impulse_candlestick(self,ax, date,open,close,high,low, ema, fmacd, width=0.9, longcolor='g', shortcolor='r',
 		neutralcolor='b'):
@@ -1371,6 +1376,7 @@ class Technical_Analysis(object):
 
 		lines = []
 		patches = []
+		data = []
 		l = len(date)
 		lema =  len(ema)
 		lmacd = len(macd)
@@ -1378,6 +1384,7 @@ class Technical_Analysis(object):
 		macd_offset = l - lmacd
 
 		ISstart = l -  min(lema,lmacd) 
+
 
 		for i in range(0,l):
 			dateNum = date2num(date[i])
@@ -1391,18 +1398,23 @@ class Technical_Analysis(object):
 				# get derivative of macd
 				d_macd = macd[imacd] - macd[imacd - 1] >= 0
 
-				if d_ema and d_macd:
+				if d_ema and d_macd: # long
 					#print (d_ema, d_macd, "Long")
 					color = longcolor
-				elif not d_ema and not d_macd:
+					data.append(1)
+				elif not d_ema and not d_macd: # short
 					#print (d_ema, d_macd, "Short")
 					color = shortcolor
-				elif not d_ema and d_macd or d_ema and not d_macd:
+					data.append(-1)
+				elif not d_ema and d_macd or d_ema and not d_macd: # neutral
 					#print (d_ema, d_macd, "Neutral")
 					color = neutralcolor
+					data.append(0)
 			else:
 				# neutral
 				color = shortcolor#neutralcolor
+				data.append(-1)
+
 
 			'''
 			if close[i] >= open[i]:
@@ -1454,8 +1466,8 @@ class Technical_Analysis(object):
 			ax.add_line(cline)
 			#ax.add_patch(rect)
 		ax.autoscale_view()
-
-		return lines, patches
+		self.impulse_data = data
+		return lines, patches, data
 
 	def _candlestick(self,ax, date,open,close,high,low, width=0.2, colorup='k', colordown='r',
 		alpha=1.0, ochl=True):
@@ -2032,7 +2044,7 @@ def __technical_test():
 	#print (TRL.trade_history["Close"])
 
 	#TRL.plot()
-	#TRL.Impulse_System()
+	TRL.Impulse_System()
 	#TRL.SMA(period=50)
 	#TRL.EMA(period=22)
 	#TRL.EMA(period=11)
