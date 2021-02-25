@@ -1587,7 +1587,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 			trade_history = pd.DataFrame(data = data, 
 				index=index, 
 				columns=["High","Low","Open","Close","Volume","Adj Close"])
-			
+		
 		self.trade_history = trade_history.round(2)
 
 	def _weekly_history(self, trade_history):
@@ -1627,7 +1627,7 @@ class stock(Technical_Analysis,Fundamental_Analysis):
 				sum(trade_history[startB:i+1]["Volume"]),
 				trade_history["Close"][i]])
 			temp_index.append(trade_history.index[startB])
-			temp_index.append(trade_history.index[startB].weekday())
+			#temp_index.append(trade_history.index[startB].weekday())
 		
 		return temp_data, temp_index, temp_day
 

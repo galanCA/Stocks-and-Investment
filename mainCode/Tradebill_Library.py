@@ -41,7 +41,7 @@ def wsbMomentum(ticker):
 	else:
 		score += 1
 
-	# MACD-H bullish divergence
+	# weekly MACD-H bullish divergence
 
 
 
