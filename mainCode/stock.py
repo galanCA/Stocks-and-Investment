@@ -1325,6 +1325,7 @@ class Technical_Analysis(object):
 					MACD_data,
 					width=0.9, longcolor="g", shortcolor="r")
 
+		
 		if plot_data:
 			self.candle_data.xaxis_date()
 			self.candle_data.autoscale_view()
@@ -1333,6 +1334,9 @@ class Technical_Analysis(object):
 			plt.title(self.ticker)
 
 			plt.draw()
+
+
+
 
 	def _impulse_candlestick(self,ax, date,open,close,high,low, ema, fmacd, width=0.9, longcolor='g', shortcolor='r',
 		neutralcolor='b'):
@@ -2049,9 +2053,6 @@ def __technical_test():
 	#TRL.EMA(period=22)
 	#TRL.EMA(period=11)
 	#TRL.MACD()
-
-	
-	
 	#print("plot", TRL.candle_data)
 	#print("SMA", TRL.techplot)
 	plt.show()
