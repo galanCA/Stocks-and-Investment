@@ -7,7 +7,7 @@ import numpy as np
 
 import matplotlib.pyplot 		as plt
 
-def wsbMomentum(ticker):
+def wsbMomentum(ticker,n_days=400,fEMA_period=22,sEMA_period=11,ema_IS=13, fast_ema_IS=12, slow_ema_IS=26, `signal_IS=9):
 	'''
 	Weekly Impulse: 0, red; 1, green; 2, neutral after red.
 	Daily Impulse: 0, red; 1, green; 2, neutral after red.
@@ -18,8 +18,8 @@ def wsbMomentum(ticker):
 	score = 0
 
 	# Data
-	stock_daily = stock(ticker, days=400)
-	stock_weekly = stock(ticker, days=400, period="weekly")
+	stock_daily = stock(ticker, days=n_days)
+	stock_weekly = stock(ticker, days=n_days, period="weekly")
 
 	# Weekly Impulse
 	stock_weekly.Impulse_System(plot_data=False)
@@ -28,11 +28,11 @@ def wsbMomentum(ticker):
 	# Daily Impulse
 	stock_daily.Impulse_System(plot_data=False)
 	score += (stock_daily.impulse_data[-1] + 1)
-	
+
 
 	# Daily Price
-	fast_ema = stock_daily.EMA(period=22, plot_data = False)
-	slow_ema = stock_daily.EMA(period=11, plot_data = False)
+	fast_ema = stock_daily.EMA(period=fEMA_period, plot_data = False)
+	slow_ema = stock_daily.EMA(period=sEMA_period, plot_data = False)
 		
 	if stock_daily.trade_history["Close"][-1] < min(fast_ema[-1], slow_ema[-1]):
 		score += 2
@@ -70,6 +70,15 @@ def wsbMomentum(ticker):
 
 	return score
 
+def channelTrade(ticker):
+	'''
+	Possible systems
+		ATR use to check the true value
+		RSI use to confirm the undervalue price. +1 if <50, +2 <35.
+		SI
+		EMA
+	'''
+	print("a")
 
 if __name__ == '__main__':
 	score = wsbMomentum("GME")
